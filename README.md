@@ -17,13 +17,12 @@ The full solution is provided as [Docker image](https://hub.docker.com/r/pschatz
 
 The Java Library can be installed with the help of Maven from the following repository http://software.pschatzmann.ch/repository/maven-public/ as 
 
-  	<repositories>
-  		<repository>
-      			<id>pschatzmann</id>
-      			<url>http://software.pschatzmann.ch/repository/maven-public/</url>
-    		</repository>
-  	</repositories>
-
+	<repositories>
+		<repository>
+			<id>pschatzmann</id>
+			<url>http://software.pschatzmann.ch/repository/maven-public/</url>
+		</repository>
+	</repositories>
 
 	<dependency>
 		<groupId>ch.pschatzmann</groupId>
