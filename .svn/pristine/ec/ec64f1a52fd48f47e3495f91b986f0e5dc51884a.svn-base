@@ -1,0 +1,40 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * Returns all 10-K entries for 12 months (P and L) or 0 months (Balance Sheet
+ * values)
+ * 
+ * @author pschatzmann
+ *
+ */
+public class FilterQuarterValues implements BiFunction<ITable, Integer, Boolean> {
+	private ITable table;
+	private int monthsPos;
+
+	public FilterQuarterValues() {
+	}
+
+	@Override
+	public Boolean apply(ITable table, Integer row) {
+		setup(table);
+		List<String> values = table.getRowValue(row);
+		return values.get(monthsPos).matches("3|0");
+	}
+
+	protected void setup(ITable table) {
+		if (this.table != table) {
+			this.table = table;
+			monthsPos = table.getRowFieldNames().indexOf("numberOfMonths");
+			if (monthsPos < 0) {
+				throw new RuntimeException("The table needs to contain the field 'numberOfMonths'");
+			}
+		}
+	}
+
+}

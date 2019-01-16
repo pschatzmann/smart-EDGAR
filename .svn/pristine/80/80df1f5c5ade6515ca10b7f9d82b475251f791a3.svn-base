@@ -1,0 +1,309 @@
+package ch.pschatzmann.edgar.base;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ch.pschatzmann.edgar.service.EdgarFileService;
+import ch.pschatzmann.edgar.utils.Utils;
+
+/**
+ * The Standard Industrial Code SIC information and the states information is
+ * not available via the SEC filings. We scrape it from the html company
+ * information provided by the SEC.
+ * 
+ * @author pschatzmann
+ *
+ */
+public class EdgarCompany implements Serializable, Comparable<EdgarCompany> {
+	private static final Logger LOG = Logger.getLogger(EdgarCompany.class);
+	private static String destinationFolder = Utils.getProperty("destinationFolder",
+			"/data/SmartEdgar");
+	private String cik = "";
+	private String sicCode = "";
+	private String sicDescription = "";
+	private String companyName = "";
+	private String stateLocation = "";
+	private String stateIncorporation = "";
+	private String tradingSymbol=null;
+	private XBRL xbrl = new XBRL();
+
+	public EdgarCompany() {		
+	}
+	
+	public EdgarCompany(String cik) {
+		this.cik = cik;
+		try {
+			if (!loadFile()) {
+				scrape();
+				saveFile();
+			}
+		} catch (Exception ex) {
+			LOG.error(ex, ex);
+		}
+	}
+
+	public EdgarCompany(XBRL xbrl) {
+		this.xbrl = xbrl;
+		this.cik = xbrl.getCentralIndexKey();
+		try {
+			if (!loadFile() && new File(getFolderName()).exists()) {
+				scrape();
+				saveFile();
+			}
+		} catch (Exception ex) {
+			LOG.error(ex, ex);
+		}
+	}
+
+	private void copyFrom(EdgarCompany ci) {
+		this.cik = ci.cik;
+		this.sicCode = ci.sicCode;
+		this.sicDescription = ci.sicDescription;
+		this.companyName = ci.companyName;
+		this.stateLocation = ci.stateLocation;
+		this.stateIncorporation = ci.stateIncorporation;
+		this.tradingSymbol = ci.tradingSymbol;
+	}
+
+	private String fileName(String name) {
+		return destinationFolder+"/" + name + "/company-" + name + ".json";
+	}
+
+	public String getCompanyName() {
+		return !Utils.isEmpty(this.companyName) ? this.companyName : xbrl.getCompanyName();
+	}
+
+	public String getCompanyNumber() {
+		return cik;
+	}
+
+	public String getFolderName() {
+		return cik.replaceFirst("^0+(?!$)", "");
+	}
+
+	public String getIncorporationState() {
+		return stateIncorporation;
+	}
+
+	public String getLocationState() {
+		return this.stateLocation;
+	}
+
+    @JsonIgnore
+	public String getSIC() {
+		StringBuffer result = new StringBuffer();
+		result.append(sicCode);
+		result.append(" ");
+		result.append(sicDescription);
+		return result.toString();
+	}
+
+	public String getSICCode() {
+		return this.sicCode;
+	}
+
+	public String getSICDescription() {
+		if (!this.sicDescription.isEmpty()) {
+			sicDescription = sicDescription.replaceAll("&amp;", "&");
+			sicDescription = sicDescription.replaceAll("&#39;", "'");
+			return this.sicDescription;
+		}
+		if (this.sicCode.equals("3949")) {
+			return "Sporting and Athletic Goods, not elsewhere classified";
+		}
+		if (this.sicCode.equals("6221")) {
+			return "Commodity Contracts Brokers and Dealers";
+
+		}
+		if (this.sicCode.equals("9995")) {
+			return "Non-operating establishments";
+		}
+		return "";
+	}
+
+	public String getStateIncorporation() {
+		return stateIncorporation;
+	}
+
+	public String getStateLocation() {
+		return stateLocation;
+	}
+
+	public String getTradingSymbol() {
+		if ( tradingSymbol==null) {
+			this.tradingSymbol = xbrl.getTradingSymbol();
+		}
+		return this.tradingSymbol;
+	}
+
+	public boolean loadFile() {
+		boolean result = false;
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			String name = getFolderName();
+			EdgarCompany ci = mapper.readValue(new File(fileName(name)),
+					EdgarCompany.class);
+			copyFrom(ci);
+			result = true;
+		} catch (Exception ex) {
+			LOG.warn(ex);
+		}
+		return result;
+
+	}
+
+	public void saveFile() {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			String name = getFolderName();
+			mapper.writeValue(new File(fileName(name)), this);
+		} catch (Exception ex) {
+			LOG.warn(ex, ex);
+		}
+	}
+
+	private void scrape() throws MalformedURLException, IOException {
+		if (!Utils.isEmpty(this.cik)) {
+			String url = "https://www.sec.gov";
+			String urlPath = "/cgi-bin/browse-edgar?CIK=%1&Find=Search&output=atom&owner=exclude&action=getcompany&type=NA&count=0"
+					.replaceAll("%1", cik);
+
+			try {
+				String input = url + urlPath;
+				LOG.info("parsing " + input);
+				DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = domFactory.newDocumentBuilder();
+				Document doc = builder.parse(input);
+				XPath xpath = XPathFactory.newInstance().newXPath();
+
+				// XPath Query for showing all nodes value
+				companyName = xpath.compile("//conformed-name").evaluate(doc);
+				companyName = companyName.replaceAll("&amp;", "&");
+				companyName = companyName.replaceAll("'", "");
+				sicCode = xpath.compile("//assigned-sic").evaluate(doc);
+				sicDescription = xpath.compile("//assigned-sic-desc").evaluate(doc);
+				
+				stateLocation = xpath.compile("//state-location").evaluate(doc);
+				stateIncorporation = xpath.compile("//state-of-incorporation").evaluate(doc);
+
+			} catch (Exception ex) {
+				throw new IOException(ex);
+			}
+
+		} else {
+			LOG.info("CompanyIformation not determineded because the cik is not defined");
+		}
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+	
+	public void setIncorporationState(String stateIncorporation) {
+		this.stateIncorporation = stateIncorporation;
+	}
+
+	public void setLocationState(String stateLocation) {
+		this.stateLocation = stateLocation;
+	}
+	
+	public void setCompanyNumber(String cik) {
+		this.cik = cik;
+	}
+	
+	public void setSICCode(String c) {
+		this.sicCode = c;
+	}
+	
+	public void setSICDescription(String d) {
+		this.sicDescription = d;
+	}
+	
+	public void setTradingSymbol(String ts) {
+		this.tradingSymbol = ts;
+	}
+ 
+	@Override
+	public String toString() {
+		return this.cik;
+	}
+	
+	/**
+	 * Lists all entries
+	 * @return
+	 */
+	public static List<EdgarCompany> list (){
+		return stream().sorted().collect(Collectors.toList());
+	}
+	
+	/**
+	 * Returns stream of all EdgarCompany objects
+	 * @return
+	 */
+	public static Stream<EdgarCompany> stream () {
+		return Arrays.asList(new File(destinationFolder).listFiles()).stream()
+		.filter(f -> f.isDirectory())
+		.map(f -> new EdgarCompany(f.getName()));
+	}
+	
+	/**
+	 * List all filings for the company
+	 * @return
+	 */
+	public List<EdgarFiling> getFilings() {
+		return EdgarFileService.getFilings(this.getFolderName()).stream()
+			.map(f -> new EdgarFiling(f))
+			.collect(Collectors.toList());
+	}
+	
+	/**
+	 * Loads all filings for a company to one combined XBRL
+	 * @return
+	 */
+
+	public XBRL getXBRL() {
+		return getXBRL(".*");
+	}
+
+	
+	/**
+	 * Loads all filings for a company to one combined XBRL
+	 * @param regex
+	 * @return
+	 */
+	public XBRL getXBRL(String regex) {
+		XBRL xbrl = new XBRL();
+		EdgarFileService.getFilings(this.getCompanyNumber()).stream()
+			.filter(filing -> filing.matches(regex))
+			.forEach(filing -> xbrl.tryLoad(EdgarFileService.getFile(filing),null));
+		return xbrl;
+	}
+
+	
+
+	@Override
+	public int compareTo(EdgarCompany o) {
+		return this.getCompanyName().compareTo(o.getCompanyName());
+	}
+
+}

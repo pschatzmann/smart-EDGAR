@@ -1,0 +1,667 @@
+swagger: '2.0'
+info:
+  version: 0.1.0
+  title: Smart Edgar
+  description: >-
+    REST service which provides the content of 10-K and 10-Q Edgar xbrl filings. The FileService is usefull for the processing of individual filings
+    wherease the DBService provides numerical values in an aggragated way.
+tags:
+  - name: FileService
+    description: >-
+      REST service which provides the content of 10-K and 10-Q xbrl filings as
+      json. The information is read from the file system.
+  - name: DBService
+    description: >-
+      REST service which provides the consolidated result from the content of
+      10-K and 10-Q xbrl filings. The information is read from a database.
+basePath: /edgar
+
+paths:
+  /files/companies:
+    get:
+      tags:
+        - FileService
+      description: >-
+        list all existing CIK numbers for all companies. The information is determined from the xbrl
+        file system
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfString
+            type: array
+            items:
+              title: Company numbers
+              type: string
+  '/files/filings/{companyNumber}':
+    get:
+      tags:
+        - FileService
+      description: list all existing company filings
+      produces:
+        - application/json
+      parameters:
+        - name: companyNumber
+          in: path
+          description: Company number (=CIK number)
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfString
+            type: array
+            items:
+              title: Company Edgar filings
+              type: string
+  '/files/values/{filing}':
+    get:
+      tags:
+        - FileService
+      description: Determines the values of a filing. If the content type of application/zip was requested, we return the xbrl filing as zip file
+      produces:
+        - application/json
+        - application/zip
+      parameters:
+        - name: filing
+          in: path
+          description: Filing id
+          required: true
+          type: string
+        - name: dataType
+          in: query
+          description: Selection of parameters by data type
+          required: false
+          type: string 
+          enum:
+            - number 
+            - string 
+            - html
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfValue
+            type: array
+            items:
+              $ref: '#/definitions/Value'
+  '/files/presentation/{filing}':
+    get:
+      tags:
+        - FileService
+      description: Determines the presentation definition for a filing
+      produces:
+        - application/json
+      parameters:
+        - name: filing
+          in: path
+          description: Filing id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfPresentation
+            type: array
+            items:
+              $ref: '#/definitions/Presentation'
+  '/files/context/{filing}':
+    get:
+      tags:
+        - FileService
+      description: Determines all context values for a filing
+      produces:
+        - application/json
+      parameters:
+        - name: filing
+          in: path
+          description: Filing id
+          required: true
+          type: string
+        - name: segmentScope
+          in: query
+          description: Selection of contexts with or without segments
+          required: false
+          type: string
+          default: WithoutSegments
+          enum:
+            - All
+            - WithoutSegments
+            - WithSegments
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfContext
+            type: array
+            items:
+              $ref: '#/definitions/Context'
+  '/files/company/{filing}':
+    get:
+      tags:
+        - FileService
+      description: Determines the company information for a filing
+      produces:
+        - application/json
+      parameters:
+        - name: filing
+          in: path
+          description: Filing id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            $ref: '#/definitions/Company'
+  /db/fieldGroups:
+    get:
+      tags:
+        - DBService
+      description: Provides the list of all field groups
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfString
+            type: array
+            items:
+              title: Field Group
+              type: string
+  /db/fields:
+    get:
+      tags:
+        - DBService
+      description: Provides the list of all fields
+      parameters:
+        - name: group
+          in: query
+          description: Field group
+          required: false
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfFieldGroup
+            type: array
+            items:
+              $ref: '#/definitions/Field'
+  '/db/field/{fieldName}':
+    get:
+      tags:
+        - DBService
+      description: Provides the detail information of a field
+      parameters:
+        - name: fieldName
+          in: path
+          description: Field Name
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            $ref: '#/definitions/Field'
+
+  '/db/fieldValues/{fieldName}':
+    get:
+      tags:
+        - DBService
+      description: Provides the list of existing values for a field
+      parameters:
+        - name: fieldName
+          in: path
+          description: Field Name
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfFieldValues
+            type: array
+            items:
+              title: Field Value
+              type: string
+
+  /db/values:
+    get:
+      tags:
+        - DBService
+      description: >-
+        Simple Query for the Edgar database and summarize the results by the
+        indicated columns and rows. We support only empty segmentDimensions
+      parameters:
+        - name: row
+          in: query
+          description: field name for rows
+          required: false
+          default: country
+          type: string
+        - name: col
+          in: query
+          description: field name for columns
+          required: false
+          default: year
+          type: string
+        - name: parameter
+          in: query
+          description: parameters as CSV
+          required: false
+          default: NetIncomeLoss
+          type: string
+        - name: alt
+          in: query
+          description: Interpret parameter CSV as alternatives
+          required: false
+          default: true
+          type: boolean
+        - name: 'n'
+          in: query
+          description: Max number of columns and rows
+          required: false
+          default: 20
+          type: number
+        - name: format
+          in: query
+          description: Result data format (for entry in browser url). Please use the Response content type if possible instead
+          enum:
+          - json
+          - csv
+          - html
+          - sql
+          required: false
+          type: string
+      produces:
+        - application/json
+        - application/x-sql
+        - text/html 
+        - text/plain 
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            description: Array of parameter
+            type: array
+            items:
+              type: object
+    post:
+      tags:
+        - DBService
+      description: >-
+          Simple Query for the Edgar database and summarize the results by the
+          indicated columns and rows. We support only empty segmentDimensions        columns and rows.
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Query'
+      produces:
+        - application/json
+        - text/plain 
+        - application/x-sql
+        - text/html 
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfResult
+            type: array
+            items:
+              type: object
+              
+  /db/companyValues:
+    get:
+      tags:
+        - DBService
+      description: >-
+        Simple Query for the Edgar database to provide parameter information for a defined company over different periods
+      parameters:
+        - name: identifier
+          in: query
+          description: Edgar company identifier w/o leading zeros
+          required: false
+          type: string
+        - name: tradingSymbol
+          in: query
+          description: Stock Ticker code of company
+          required: false
+          type: string
+        - name: periods
+          in: query
+          description: Quarters, Years or Quarters Cumulated
+          enum:
+          - Y
+          - Q
+          - QC          
+        - name: parameters
+          in: query
+          description: parameters as CSV
+          required: false
+          type: array
+          items:
+            type: string
+        - name: format
+          in: query
+          description: Result data format (for entry in browser url). Please use the Response content type if possible instead
+          enum:
+          - json
+          - csv
+          - html
+          - sql
+          required: false
+          type: string
+      produces:
+        - application/json
+        - application/x-sql
+        - text/html 
+        - text/plain 
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            description: Array of parameter
+            type: array
+            items:
+              type: object
+    post:
+      tags:
+        - DBService
+      description: >-
+        Query for the edgar database and summarize the results by the indicated
+        columns and rows.
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CompanyQuery'
+      produces:
+        - application/json
+        - text/plain 
+        - application/x-sql
+        - text/html 
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            title: ArrayOfResult
+            type: array
+            items:
+              type: object
+definitions:
+  Value:
+    type: object
+    title: Edgar parameter value line
+    properties:
+      attributeValue:
+        description: Value of attribute
+        type: string
+      label:
+        description: Label of attribute
+        type: string
+      months:
+        description: Number of Months
+        type: number
+      attributeDate:
+        description: Date
+        type: string
+      unit:
+        description: Unit of Measure
+        type: string
+      contextID:
+        description: Context ID
+        type: string
+      parameterName:
+        description: Attribute Name
+        type: string
+      dataType:
+        description: Data type
+        type: string
+    example:
+      attributeValue: '15067'
+      label: Total Current Assets
+      months: 0
+      attributeDate: '2017-09-30'
+      unit: USD
+      contextID: Context_As_Of_30_Sep_2017T00_00_00_TO_30_Sep_2017T00_00_00
+      parameterName: AssetsCurrent
+      dataType: number
+  Field:
+    type: object
+    title: Edgar parameter information
+    properties:
+      table:
+        description: Database table name
+        type: string
+      fieldName:
+        description: Field name in database
+        type: string
+      relationName:
+        description: Name of relation of there are multiple paths to the field
+        type: string
+      filterValues:
+        description: collection of values which will be used to filter values
+        type: array
+        items:
+          type: string
+    example:
+      table: values
+      fieldName: parameterName
+      relationName: null
+      filterValues: []
+  Presentation:
+    type: object
+    title: Edgar presentation information represented as tree
+    properties:
+      name:
+        description: Name
+        type: string
+      role:
+        description: Role
+        type: string
+      label:
+        description: Label
+        type: string
+      parentName:
+        description: Name of parent
+        type: string
+      factsAvailable:
+        description: Are there any facts
+        type: boolean
+      leaf:
+        description: Is this a leaf node
+        type: boolean
+      sequence:
+        description: Sequence number in Tree Level
+        type: number
+      viewName:
+        description: Name of view
+        type: string
+      contextIds:
+        description: Context ID
+        type: array
+        items:
+          type: string
+      level:
+        description: Tree level
+        type: number
+  Context:
+    type: object
+    title: Context information
+    properties:
+      id:
+        description: Context id
+        type: string
+      dateLabel:
+        description: Label for Date
+        type: string
+      segmentLabel:
+        description: Label for Segment
+        type: string
+      dimensionLabel:
+        description: Label for Dimension
+        type: string
+      companyIdentifier:
+        description: Company code
+        type: string
+      segments:
+        description: Segments
+        type: array
+        items:
+          type: string
+      dimensions:
+        description: Dimensions
+        type: array
+        items:
+          type: string
+      date:
+        description: Date
+        type: string
+      months:
+        description: Number of months for date period
+        type: number
+  Company:
+    type: object
+    title: Company information
+    properties:
+      companyName:
+        description: Company name
+        type: string
+      siccode:
+        description: Sector code
+        type: number
+      sicdescription:
+        description: Sector description
+        type: string
+      sic:
+        description: Sector code & description
+        type: string
+      incorporationState:
+        description: 2digit code of state
+        type: string
+      locationState:
+        description: 2digit code of state
+        type: string
+      tradingSymbol:
+        description: Ticker symbol
+        type: string
+  Query:
+    type: object
+    title: Query Specification
+    properties:
+      rows:
+        description: Rows
+        type: array
+        items:
+          $ref: '#/definitions/Field'
+      cols:
+        description: Cols
+        type: array
+        items:
+          $ref: '#/definitions/Field'
+      filter:
+        description: Filter criteria
+        type: array
+        items:
+          $ref: '#/definitions/Field'
+      parameters:
+        description: Parameters
+        type: array
+        items:
+           type: string
+      parameterAsPriorityAlternatives:
+        description: Treat list of parameters as alternatives
+        type: boolean
+      topN:
+        description: Number of rows and columns
+        type: number
+        
+    example:
+      rows: [{
+        table: states,
+        fieldName: country,
+        relationName: location
+        }]
+      cols: [{
+        table: values,
+        fieldName: year,
+        }]
+      filter: [ {
+            table: values,
+            fieldName: segment,
+            filterValues: [""] 
+          }, {
+            table: values,
+            fieldName: unitRef,
+            filterValues: ["USD"] 
+          }
+        ]
+      parameters: ["NetIncomeLoss"]
+      topN: 10
+      parameterAsPriorityAlternatives: true
+  CompanyQuery:
+    type: object
+    title: Company Query Specification
+    properties:
+      parameters:
+        description: Rows
+        type: array
+        items:
+          type: string
+      formulas:
+        description: Forumla to calculate a new parameter
+        type: array
+        items:
+          type: string
+      companySelection:
+        description: Information to select the company
+        type: object
+        schema:
+            $ref: '#/definitions/CompanySelection'
+      periods:
+        description: Quarters, Years or Quarters Cumulated
+        enum:
+        - Y
+        - Q
+        - QC
+    example:
+      parameters: 
+      - NetIncomeLoss
+      formulas:
+        - "NetIncomeLossMio: NetIncomeLoss / 1000000"
+        - "NetIncomeLossChange%:  Edgar.percentChange('NetIncomeLossMio')"
+      companySelection:
+        tradingSymbol: AAPL
+      periods: Y
+        
+  CompanySelection:
+    type: object
+    title: Company Selection
+    properties:
+      identifier:
+        description: Edgar Company identifer
+        type: string
+      tradingSymbol:
+        description: Company ticker symbol
+        type: string
+      companyName:
+        description: Company Name as reported by Edgar
+        type: string
+    example:
+      tradingSymbol: AAPL
+        	

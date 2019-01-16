@@ -1,0 +1,126 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import ch.pschatzmann.common.table.ITable;
+import ch.pschatzmann.common.utils.Tuple;
+
+/**
+ * For an ITable we evaluate the reporting dates in order to identify the valid yearly K-10 dates,
+ * The quarterly entries or the cumulated quarterly entries.
+ * 
+ * @author pschatzmann
+ *
+ */
+
+public class PeriodsDetermination {
+	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+	private ITable table;
+	private Integer weekForYearly = null;
+	private List<Integer> weeksForQuarterly = null;
+	private int weeksRange = 3;
+
+	public PeriodsDetermination(ITable table) {
+		this.table = table;
+	}
+	
+	protected void setupYearly() {
+		if (weekForYearly == null) {
+			// remove entries where we reported quarterly values as part of the 10-K
+			Map<Integer, Long> periodsCount = table.toList().stream()
+					.filter(m -> m.get("form").equals("10-K") && m.get("numberOfPeriods").equals("12"))
+					.map(m -> m.get("date").toString())
+					.collect(Collectors.groupingBy(i -> getWeekOfYear(i), Collectors.counting()));
+
+			// determine the value which was most often used
+			weekForYearly = getMaxCount(periodsCount).get(0).getKey();
+		}
+	}
+	
+	protected void setupQuarterly() {
+		if (weeksForQuarterly == null) {
+			// remove entries where we reported quarterly values as part of the 10-K
+			Map<Integer, Long> periodsCount = table.toList().stream()
+					.filter(m ->  m.get("numberOfPeriods").equals("3"))
+					.map(m -> m.get("date").toString())
+					.collect(Collectors.groupingBy(i -> getWeekOfYear(i), Collectors.counting()));
+
+			// determine the values which was most often used
+			weeksForQuarterly = getMaxCount(periodsCount).stream()
+					.limit(4)
+					.map(m -> m.getKey())
+					.sorted()
+					.collect(Collectors.toList());
+		}
+	}
+
+	protected List<Entry<Integer, Long>> getMaxCount(Map<Integer, Long> map) {
+		return map.entrySet().stream()
+				.sorted((o1, o2) -> -o1.getValue().compareTo(o2.getValue()))
+				.collect(Collectors.toList());
+	}
+
+	protected boolean valueInRangeWeekOfYear(String date, int min, int max) {
+		try {
+			int value = getWeekOfYear(date);
+			return value > min && value < max;
+		} catch (Exception ex) {
+			return false;
+		}
+	}
+	
+	protected boolean valueInRange(String date, List<Integer> weeksForQuarterly2, int max) {
+		for (int week : weeksForQuarterly2) {
+			if (valueInRangeWeekOfYear(date,week-max,week+max)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	protected int getWeekOfYear(String date) {
+		try {
+			GregorianCalendar calendar = new GregorianCalendar();
+			calendar.setTime(df.parse(date));
+			return calendar.get(GregorianCalendar.WEEK_OF_YEAR);
+		} catch (Exception ex) {
+			return -1;
+		}
+	}
+	
+	protected int getFirstQuarter() {
+		int pos = weeksForQuarterly.indexOf(weekForYearly) - 1;
+		return pos>=0 ? weeksForQuarterly.get(pos) : weeksForQuarterly.get(3);
+	}
+
+
+	public boolean isValidYearly(String date, String form, String periods) {
+		setupYearly();		
+		return form.equals("10-K") && periods.matches("12|0") && valueInRangeWeekOfYear(date, weekForYearly - weeksRange, weekForYearly + weeksRange);
+	}
+
+	public boolean isValidQuarterly(String date, String form, String periods) {
+		setupQuarterly();
+		return periods.matches("3|0") && valueInRange(date, weeksForQuarterly, weeksRange);
+	}
+
+	public boolean isValidQuarterlyCumulated(String date, String form, String periods) {
+		setupYearly();
+		setupQuarterly();
+		int weeksFor1stQuarter = getFirstQuarter();
+		return periods.matches("0|6|9|12") ||  periods.equals("3") && valueInRangeWeekOfYear(date, weeksFor1stQuarter - weeksRange, weeksFor1stQuarter + weeksRange);		
+	}
+
+
+}

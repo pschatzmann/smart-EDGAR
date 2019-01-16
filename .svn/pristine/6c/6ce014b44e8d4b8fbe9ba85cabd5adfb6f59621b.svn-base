@@ -1,0 +1,56 @@
+<h2>Consolidated Balance Sheets</h2><h3></h3><table border='1' style='width:100%'>
+<tr><th/><th/><th>2010-12-31</th><th>2011-12-31</th><th>2010-01-01 to 2010-12-31</th><th>2011-01-01 to 2011-12-31</th></tr>
+<tr><td>Consolidated Balance Sheets</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-Statement</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>--Statement, Scenario</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Scenario, Unspecified</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>----Series C Preferred Stock</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, par value</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, shares authorized</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, shares issued</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, shares outstanding</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, $50.00 par value; authorized shares: 974,260 shares; none issued</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>----Other Series Preferred Stock</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, par value</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, shares authorized</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, shares issued</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, $50.00 par value; authorized shares: 974,260 shares; none issued</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>--Beginning balance</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Other Intangible Assets, Accumulated Amortization</td><td>USD</td><td></td><td></td><td>1053000</td><td>1560000</td></tr>
+<tr><td>---Preferred stock, par value</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Preferred stock, shares authorized</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Preferred stock, shares issued</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Preferred stock, shares outstanding</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Common stock, par value</td><td>USD</td><td>0.01</td><td>0.01</td><td></td><td></td></tr>
+<tr><td>---Common stock, shares authorized</td><td>SHARES</td><td>200000000</td><td>200000000</td><td></td><td></td></tr>
+<tr><td>---Common stock, shares issued</td><td>SHARES</td><td>54359784</td><td>59251836</td><td></td><td></td></tr>
+<tr><td>---Common stock, shares outstanding</td><td>SHARES</td><td>54359784</td><td>59251836</td><td></td><td></td></tr>
+</table>
+<h2>Consolidated Balance Sheets</h2><h3>Statement, Scenario</h3><table border='1' style='width:100%'>
+<tr><th/><th/><th>Other Series Preferred Stock2010-12-31</th><th>Other Series Preferred Stock2011-12-31</th><th>Series C Preferred Stock2010-12-31</th><th>Series C Preferred Stock2011-12-31</th></tr>
+<tr><td>Consolidated Balance Sheets</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-Statement</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>--Statement, Scenario</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Scenario, Unspecified</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>----Series C Preferred Stock</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, par value</td><td>USD</td><td>50</td><td>50</td><td>50</td><td>50</td></tr>
+<tr><td>-----Preferred stock, shares authorized</td><td>SHARES</td><td>981260</td><td>981260</td><td>14400</td><td>14400</td></tr>
+<tr><td>-----Preferred stock, shares issued</td><td>SHARES</td><td>0</td><td>0</td><td>14400</td><td>10434</td></tr>
+<tr><td>-----Preferred stock, shares outstanding</td><td>SHARES</td><td></td><td></td><td>14400</td><td>10434</td></tr>
+<tr><td>-----Preferred stock, $50.00 par value; authorized shares: 974,260 shares; none issued</td><td>USD</td><td></td><td></td><td>720000</td><td>522000</td></tr>
+<tr><td>----Other Series Preferred Stock</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>-----Preferred stock, par value</td><td>USD</td><td>50</td><td>50</td><td>50</td><td>50</td></tr>
+<tr><td>-----Preferred stock, shares authorized</td><td>SHARES</td><td>981260</td><td>981260</td><td>14400</td><td>14400</td></tr>
+<tr><td>-----Preferred stock, shares issued</td><td>SHARES</td><td>0</td><td>0</td><td>14400</td><td>10434</td></tr>
+<tr><td>-----Preferred stock, $50.00 par value; authorized shares: 974,260 shares; none issued</td><td>USD</td><td></td><td></td><td>720000</td><td>522000</td></tr>
+<tr><td>--Beginning balance</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Other Intangible Assets, Accumulated Amortization</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Preferred stock, par value</td><td>USD</td><td>50</td><td>50</td><td>50</td><td>50</td></tr>
+<tr><td>---Preferred stock, shares authorized</td><td>SHARES</td><td>981260</td><td>981260</td><td>14400</td><td>14400</td></tr>
+<tr><td>---Preferred stock, shares issued</td><td>SHARES</td><td>0</td><td>0</td><td>14400</td><td>10434</td></tr>
+<tr><td>---Preferred stock, shares outstanding</td><td>SHARES</td><td></td><td></td><td>14400</td><td>10434</td></tr>
+<tr><td>---Common stock, par value</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Common stock, shares authorized</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Common stock, shares issued</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>---Common stock, shares outstanding</td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>

@@ -1,0 +1,64 @@
+package ch.pschatzmann.edgar.table;
+
+import java.util.List;
+
+
+public class Key implements Comparable<Key> {
+	private List<String> keyValues;
+
+	public Key(List<String> keyValues) {
+		this.keyValues = keyValues;
+	}
+
+	public List<String> getKeyValues() {
+		return keyValues;
+	}
+
+	public int size() {
+		return keyValues.size();
+	}
+
+	public String get(int index) {
+		String value = getKeyValues().get(index);
+		return value == null ? "" : value;
+	}
+
+	@Override
+	public int hashCode() {
+		int hashCode = 0;
+		for (String s : keyValues) {
+			hashCode = hashCode | s.hashCode();
+		}
+		return hashCode;
+	}
+
+	@Override
+	public int compareTo(Key o) {
+		int result = 0;
+		for (int j = size()-1; j >= 0; j--) {
+			result = get(j).compareTo(o.get(j));
+			if (result != 0) {
+				return result;
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final Key other = (Key) obj;
+		if (this.hashCode()!=other.hashCode())
+			return false;
+		return compareTo(other) == 0;
+	}
+
+	public String toString() {
+		return this.keyValues.toString();
+	}
+}

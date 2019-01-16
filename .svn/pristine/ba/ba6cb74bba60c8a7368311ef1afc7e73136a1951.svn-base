@@ -1,0 +1,18 @@
+package ch.pschatzmann.edgar.test;
+
+import org.junit.Test;
+
+import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValues;
+import ch.pschatzmann.edgar.reporting.company.CompanySelection;
+
+public class TestCompanySelection {
+	@Test
+	public void test() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setParameterNames("NetIncomeLoss");
+
+		System.out.println(values.size());
+
+	}
+
+}

@@ -1,0 +1,70 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.List;
+import java.util.function.BiFunction;
+
+import org.apache.log4j.Logger;
+
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * Returns all 10-K entries for 12 months (P and L) or 0 months (Balance Sheet
+ * values)
+ * 
+ * @author pschatzmann
+ *
+ */
+public class FilterQuarterValues implements BiFunction<ITable, Integer, Boolean> {
+	private static final Logger LOG = Logger.getLogger(FilterQuarterValues.class);
+	private ITable table;
+	private int monthsPos;
+	private int datePos;
+
+	public FilterQuarterValues() {
+	}
+
+	@Override
+	public Boolean apply(ITable table, Integer row) {
+		boolean result = false;
+		setup(table);
+		// remove duplicates
+		if (isDupliate(table, row)) {
+			LOG.info("remove duplicate: "+table.getRowValue(row));
+			result = false;
+		} else {
+			List<String> values = table.getRowValue(row);
+			result = values.get(monthsPos).matches("3|0");
+		}
+		return result;
+	}
+
+	protected void setup(ITable table) {
+		if (this.table != table) {
+			this.table = table;
+			monthsPos = table.getRowFieldNames().indexOf("numberOfMonths");
+			datePos = table.getRowFieldNames().indexOf("date");
+			if (monthsPos < 0) {
+				throw new RuntimeException("The table needs to contain the field 'numberOfMonths'");
+			}
+			if (datePos < 0) {
+				throw new RuntimeException("The table needs to contain the field 'date'");
+			}
+
+		}
+	}
+	
+	protected boolean isDupliate(ITable table, Integer row) {
+		boolean result = false;
+		if (row+1 < table.getRowCount()) {
+			String periods = table.getRowValue(row).get(monthsPos);
+			String periods1 = table.getRowValue(row+1).get(monthsPos);
+
+			String date = table.getRowValue(row).get(datePos);
+			String date1 = table.getRowValue(row+1).get(datePos);
+			result = periods1.equals(periods) && date1.equals(date);
+		}  
+		return result;
+	}
+
+
+}

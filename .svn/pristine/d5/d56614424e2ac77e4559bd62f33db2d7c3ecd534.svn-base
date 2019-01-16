@@ -1,0 +1,39 @@
+package ch.pschatzmann.edgar.test;
+
+import org.junit.Test;
+
+import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValues;
+import ch.pschatzmann.edgar.reporting.company.CompanySelection;
+import ch.pschatzmann.edgar.reporting.company.FilterQuarterlyCumulated;
+import ch.pschatzmann.edgar.reporting.company.FilterYearly;
+
+public class TestCompanySelection {
+	@Test
+	public void test() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setParameterNames("NetIncomeLoss");
+
+		System.out.println(values.size());
+
+	}
+	
+	@Test
+	public void testYearly() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setFilter(new FilterYearly());
+
+		System.out.println(values.size());
+
+	}
+
+	@Test
+	public void testQuarterlyCumulated() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setFilter(new FilterQuarterlyCumulated());
+
+		System.out.println(values.size());
+
+	}
+
+
+}

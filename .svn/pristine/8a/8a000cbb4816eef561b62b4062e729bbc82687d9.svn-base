@@ -1,0 +1,133 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import ch.pschatzmann.common.table.FilteredTable;
+import ch.pschatzmann.common.table.FormatException;
+import ch.pschatzmann.common.table.ITable;
+import ch.pschatzmann.common.table.TableConsolidated;
+import ch.pschatzmann.common.table.TableFormatterCSV;
+import ch.pschatzmann.common.table.TableFormatterHtml;
+import ch.pschatzmann.common.table.TableFormatterJson;
+import ch.pschatzmann.edgar.base.errors.DataException;
+import ch.pschatzmann.edgar.reporting.EdgarModel;
+import ch.pschatzmann.edgar.reporting.NavigationField;
+import ch.pschatzmann.edgar.reporting.Table;
+import ch.pschatzmann.edgar.reporting.ValueField;
+import ch.pschatzmann.edgar.utils.Utils;
+
+/**
+ * Provides the company information for all or selected companies
+ * 
+ * @author pschatzmann
+ *
+ */
+public class CompanySearch implements ICompanyInfo {
+	private static final long serialVersionUID = 1L;
+	private Table table;
+	private String fieldName;
+	private List<String> values = new ArrayList();
+	private boolean onlyCompaniesWithtradingSymbol = false;
+	
+
+	public CompanySearch() throws DataException, ClassNotFoundException, SQLException {
+	}
+
+	public CompanySearch(String name) throws DataException, ClassNotFoundException, SQLException {
+		this.fieldName = "companyName";
+		this.values = Arrays.asList(name);
+	}
+
+	public CompanySearch(String fieldName, List<String> values)
+			throws DataException, ClassNotFoundException, SQLException {
+		this.fieldName = fieldName;
+		this.values = values;
+	}
+
+	public CompanySearch(String fieldName, String... value) {
+		this.fieldName = fieldName;
+		this.values = Arrays.asList(value);		
+	}
+
+	public CompanySearch(String fieldName, String value)
+			throws DataException, ClassNotFoundException, SQLException {
+		this.fieldName = fieldName;
+		this.values = Arrays.asList(value);
+	}
+
+	protected void setup() throws DataException, SQLException, ClassNotFoundException {
+		if (table == null) {
+			EdgarModel model = new EdgarModel();
+			model.setParameterAsPriorityAlternatives(false);
+			model.create();
+			
+			if (!Utils.isEmpty(fieldName)) {
+				NavigationField searchField = model.getNavigationField("company", fieldName, null);
+				searchField.setFilterValues(values);
+				searchField.setSupportWildCardFilter(true);
+			}
+			// if we dont search by tradingSymbol we define if we want to have only entries with the tradingSymbol filled
+			if (!fieldName.equals("tradingSymbol") && this.isOnlyCompaniesWithTradingSymbol()) {
+				model.getNavigationField("company", "tradingSymbol", null).setFilterValues("").setFilterEquals(false);
+			}
+			
+			table = new Table();
+			//table.setValueField(null);
+			table.addRow(model.getNavigationField("company", "identifier", null));
+			table.addRow(model.getNavigationField("company", "companyName", null));
+			table.addRow(model.getNavigationField("company", "tradingSymbol", null));
+			table.addRow(model.getNavigationField("company", "incorporation", null));
+			table.addRow(model.getNavigationField("company", "location", null));
+			table.addRow(model.getNavigationField("company", "sicDescription", null));
+			table.execute(model);
+			
+		}
+	}
+
+
+	public String toCsv() throws FormatException, ClassNotFoundException, DataException, SQLException {
+		setup();
+		return new TableFormatterCSV().format(table);
+	}
+
+	public String toHtml() throws FormatException, ClassNotFoundException, DataException, SQLException {
+		setup();
+		return new TableFormatterHtml().format(table);
+	}
+
+	public String toJson() throws FormatException, ClassNotFoundException, DataException, SQLException {
+		setup();
+		return new TableFormatterJson().format(table);
+	}
+
+	public List<Map<String, ?>> toList() throws ClassNotFoundException, DataException, SQLException {
+		setup();
+		return this.table.toList();
+	}
+
+	public ITable getTable() throws ClassNotFoundException, DataException, SQLException {
+		setup();
+		return this.table;
+	}
+
+	public long size() throws ClassNotFoundException, DataException, SQLException {
+		setup();
+		return this.table.getRowCount();
+	}
+
+	public boolean isOnlyCompaniesWithTradingSymbol() {
+		return onlyCompaniesWithtradingSymbol;
+	}
+
+	public CompanySearch onlyCompaniesWithTradingSymbol(boolean onlyCompaniesWithtradingSymbol) {
+		this.onlyCompaniesWithtradingSymbol = onlyCompaniesWithtradingSymbol;
+		return this;
+	}
+
+}

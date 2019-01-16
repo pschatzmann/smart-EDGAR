@@ -1,0 +1,42 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiFunction;
+
+import org.apache.log4j.Logger;
+
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * Returns all 10-K entries for 12 months or 0 months
+ * 
+ * @author pschatzmann
+ *
+ */
+public class FilterQuarterlyCumulated implements BiFunction<ITable, Integer, Boolean> {
+	private static final Logger LOG = Logger.getLogger(FilterQuarterlyCumulated.class);
+	private List<Map<String, ?>> list;
+	private PeriodsDetermination periods;
+
+	public FilterQuarterlyCumulated() {
+	}
+	
+	@Override
+	public Boolean apply(ITable table, Integer row) {
+		setup(table);
+		Map<String,?> record = list.get(row);
+		return periods.isValidQuarterlyCumulated(record.get("date").toString(), record.get("form").toString(), record.get("numberOfMonths").toString());
+	}
+
+	protected void setup(ITable table) {
+		if (this.list != table) {
+			this.list = table.toList();
+			periods = new PeriodsDetermination(table);
+		}
+	}
+
+
+}

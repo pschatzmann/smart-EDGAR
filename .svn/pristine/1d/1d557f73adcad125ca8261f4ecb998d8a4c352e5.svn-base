@@ -1,0 +1,178 @@
+package ch.pschatzmann.edgar.test;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import ch.pschatzmann.common.table.FormatException;
+import ch.pschatzmann.common.table.TableFormatterCSV;
+import ch.pschatzmann.edgar.base.EdgarCompany;
+import ch.pschatzmann.edgar.base.errors.DataException;
+import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValuesDB;
+import ch.pschatzmann.edgar.reporting.company.CompanySearch;
+import ch.pschatzmann.edgar.reporting.company.CompanySelection;
+import ch.pschatzmann.edgar.reporting.company.FilterQuarterlyCumulated;
+import ch.pschatzmann.edgar.reporting.company.FilterYearly;
+import ch.pschatzmann.edgar.table.CompanyEdgarValues;
+
+public class TestCompanyValues {
+	@Test
+	public void testCompanyEdgarValues() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValuesDB(new CompanySelection().setTradingSymbol("AAPL"))
+			.setParameterNames("NetIncomeLoss");
+		
+		System.out.println(values.size());
+		Assert.assertTrue(values.size()>0);
+		Assert.assertTrue(((Number) values.toList().get(10).get("NetIncomeLoss")).doubleValue() > 0.0);
+
+	}
+	
+	@Test
+	public void testCompanyEdgarValuesYearly() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValuesDB(new CompanySelection().setTradingSymbol("AAPL"))
+			.setFilter(new FilterYearly());
+
+		System.out.println(values.size());
+		Assert.assertTrue(values.size()>0);
+		Assert.assertTrue(((Number) values.toList().get(5).get("NetIncomeLoss")).doubleValue() > 0.0);
+
+	}
+
+	@Test
+	public void testCompanyEdgarValuesQuarterlyCumulated() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValuesDB(new CompanySelection().setTradingSymbol("AAPL"))
+			.setFilter(new FilterQuarterlyCumulated());
+
+		System.out.println(values.size());
+		Assert.assertTrue(values.size()>0);
+		List<Map<String,?>> list = values.toList();
+		Assert.assertTrue(((Number) list.get(1).get("NetIncomeLoss")).doubleValue() > 0.0);
+	}
+	
+	
+	@Test
+	public void testCompanyEdgarValuesFilter() throws ClassNotFoundException, DataException, SQLException {
+		CompanyEdgarValues test = new CompanyEdgarValuesDB(new CompanySelection().setTradingSymbol("AAPL"))
+			    .setFilter(new FilterYearly(),false)
+			    .setParameterNames("NetIncomeLoss","OperatingIncomeLoss","Test");
+		
+		List<Map<String, ?>> list = test.toList();
+		Assert.assertTrue(((Number) list.get(1).get("NetIncomeLoss")).doubleValue() > 0.0);
+		Assert.assertTrue(((Number)test.getTable().getValue(0, 0)).doubleValue() > 0);
+		Assert.assertTrue(((Number)test.getTable().getValue(0, 1)).doubleValue() > 0);
+		Assert.assertTrue(((Number)test.getTable().getValue(0, 2)).doubleValue() > 0);
+
+	}
+
+	@Test
+	public void testCompanySearch() throws ClassNotFoundException, DataException, SQLException, FormatException {
+		CompanySearch companySearch = new CompanySearch("Apple%");
+		Assert.assertTrue(companySearch.size()>0);
+		System.out.println(companySearch.toCsv());
+	}
+
+	@Test
+	public void testCompanySearchList() throws ClassNotFoundException, DataException, SQLException, FormatException {
+		CompanySearch companySearch = new CompanySearch("companyName",Arrays.asList("A%","B%"));
+		Assert.assertTrue(companySearch.size()>0);
+		System.out.println(companySearch.toCsv());
+	}
+	
+	@Test
+	public void testCompanySearchTicker() throws ClassNotFoundException, DataException, SQLException, FormatException {
+		CompanySearch companySearch = new CompanySearch("tradingSymbol",Arrays.asList("AAPL"));
+		System.out.println(companySearch.toCsv());
+	}
+	
+	@Test
+	public void testFormulas() throws ClassNotFoundException, DataException, SQLException, FormatException {
+		CompanyEdgarValues test = new CompanyEdgarValuesDB(new CompanySelection().setTradingSymbol("AAPL"))
+			    .setFilter(new FilterYearly(),false)
+			    .setParameterNames("NetIncomeLoss","OperatingIncomeLoss")
+			    .addFormula("NetIncome", "Edgar.coalesce('NetIncomeLoss','OperatingIncomeLoss')")
+			    .addFormula("NetIncomeMio", "NetIncomeLoss / 1000000.0")
+			    .addFormula("NetIncomeLoss-1", "Edgar.lag('NetIncomeLoss',-1)");
+		
+
+		System.out.println(new TableFormatterCSV().format(test.getTable()));
+		
+		List<Map<String, ?>> list = test.toList();
+
+		Assert.assertTrue(((Number) list.get(1).get("NetIncomeLoss")).doubleValue() > 0.0);
+		Assert.assertTrue(((Number) list.get(1).get("NetIncome")).doubleValue() > 0.0);
+		Assert.assertTrue(((Number) list.get(1).get("NetIncomeMio")).doubleValue() > 0.0);
+	}
+	
+	@Test
+	public void testFormulas1() throws ClassNotFoundException, DataException, SQLException, FormatException {
+		CompanyEdgarValues values = new CompanyEdgarValuesDB(new CompanySelection().setTradingSymbol("AAPL"))
+			    .setFilter(new FilterYearly())
+			    .setUseArrayList(true)
+			    .setParameterNames("NetIncomeLoss","OperatingIncomeLoss","ResearchAndDevelopmentExpense",
+			        "CashAndCashEquivalentsAtCarryingValue","AvailableForSaleSecuritiesCurrent","AccountsReceivableNetCurrent",
+			        "Revenues","SalesRevenueNet","InventoryNet","AssetsCurrent","LiabilitiesCurrent","Assets","EarningsPerShareBasic",
+			        "StockholdersEquity")
+			    .addFormula("Revenue","Edgar.coalesce('Revenues', 'SalesRevenueNet')")
+			    .addFormula("QuickRatio","(CashAndCashEquivalentsAtCarryingValue + AccountsReceivableNetCurrent + AvailableForSaleSecuritiesCurrent) / LiabilitiesCurrent")
+			    .addFormula("CurrentRatio","AssetsCurrent / LiabilitiesCurrent")
+			    .addFormula("InventoryTurnover","Revenue / InventoryNet")
+			    .addFormula("NetProfitMargin","NetIncomeLoss / Revenue")
+			    .addFormula("SalesResearchRatio%","ResearchAndDevelopmentExpense / Revenue *100")
+			    .addFormula("NetIncomeResearchRatio%","ResearchAndDevelopmentExpense / NetIncomeLoss * 100")
+			    .addFormula("NetIncomeChange%", "NetIncomeLoss - Edgar.lag('NetIncomeLoss', -1) / Edgar.lag('NetIncomeLoss', -1) * 100 ")  
+			    .addFormula("RevenueChange%", "Edgar.percentChange('Revenue')" )  
+			    .addFormula("ResearchAndDevelopmentChange%","Edgar.percentChange('ResearchAndDevelopmentExpense')" )
+			    .removeParameterNames("Revenues","SalesRevenueNet");
+		
+		System.out.println(new TableFormatterCSV<Number>().format(values.getTable()));
+		List<Map<String, Number>> list = values.getTable().toList();
+		
+		
+		Assert.assertNotNull(list.get(3).get("Assets"));
+		Assert.assertNotNull(list.get(3).get("ResearchAndDevelopmentChange%"));
+		Assert.assertNotNull(list.get(3).get("NetProfitMargin"));
+
+		
+	}
+	
+	
+	@Test
+	public void testFormulasFile() throws ClassNotFoundException, DataException, SQLException, FormatException {
+		CompanyEdgarValues values = new EdgarCompany("320193").getCompanyEdgarValues()
+			    .setFilter(new FilterYearly())
+			    .setUseArrayList(true)
+			    .setParameterNames("NetIncomeLoss","OperatingIncomeLoss","ResearchAndDevelopmentExpense",
+			        "CashAndCashEquivalentsAtCarryingValue","AvailableForSaleSecuritiesCurrent","AccountsReceivableNetCurrent",
+			        "Revenues","SalesRevenueNet","InventoryNet","AssetsCurrent","LiabilitiesCurrent","Assets","EarningsPerShareBasic",
+			        "StockholdersEquity")
+			    .addFormula("Revenue","Edgar.coalesce('Revenues', 'SalesRevenueNet')")
+			    .addFormula("QuickRatio","(CashAndCashEquivalentsAtCarryingValue + AccountsReceivableNetCurrent + AvailableForSaleSecuritiesCurrent) / LiabilitiesCurrent")
+			    .addFormula("CurrentRatio","AssetsCurrent / LiabilitiesCurrent")
+			    .addFormula("InventoryTurnover","Revenue / InventoryNet")
+			    .addFormula("NetProfitMargin","NetIncomeLoss / Revenue")
+			    .addFormula("SalesResearchRatio%","ResearchAndDevelopmentExpense / Revenue *100")
+			    .addFormula("NetIncomeResearchRatio%","ResearchAndDevelopmentExpense / NetIncomeLoss * 100")
+			    .addFormula("NetIncomeChange%", "NetIncomeLoss - Edgar.lag('NetIncomeLoss', -1) / Edgar.lag('NetIncomeLoss', -1) * 100 ")  
+			    .addFormula("RevenueChange%", "Edgar.percentChange('Revenue')" )  
+			    .addFormula("ResearchAndDevelopmentChange%","Edgar.percentChange('ResearchAndDevelopmentExpense')" )
+			    .removeParameterNames("Revenues","SalesRevenueNet");
+		
+		System.out.println(new TableFormatterCSV<Number>().format(values.getTable()));
+		List<Map<String, Number>> list = values.getTable().toList();
+		
+		
+		Assert.assertNotNull(list.get(3).get("Assets"));
+		Assert.assertNotNull(list.get(3).get("ResearchAndDevelopmentChange%"));
+		Assert.assertNotNull(list.get(3).get("NetProfitMargin"));
+
+		
+	}
+	
+	
+	
+
+}

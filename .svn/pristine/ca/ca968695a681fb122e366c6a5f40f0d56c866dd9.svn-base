@@ -1,0 +1,57 @@
+package ch.pschatzmann.edgar.test;
+
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import ch.pschatzmann.common.table.ITable;
+import ch.pschatzmann.common.table.TableFormatterCSV;
+import ch.pschatzmann.common.table.Value;
+import ch.pschatzmann.edgar.base.EdgarFiling;
+import ch.pschatzmann.edgar.base.XBRL;
+import ch.pschatzmann.edgar.reporting.ValueField;
+
+public class TestValuesFromFiles {
+	
+	@Test
+	public void testList() throws Exception {
+		List<EdgarFiling> list = EdgarFiling.list(".*8-K.*");
+		Assert.assertFalse(list.isEmpty());
+		EdgarFiling filing = list.get(0);
+		Assert.assertNotNull(filing.getCompanyInfo());
+		System.out.println("date:"+filing.getDate());
+		Assert.assertNotNull(filing.getDate());
+		System.out.println("form:"+filing.getForm());
+		Assert.assertEquals("8-K",filing.getForm());
+		Assert.assertNotNull(filing.getXBRL());
+	}
+	
+	
+	@Test
+	public void testText() throws Exception {
+		List<EdgarFiling> list = EdgarFiling.list(".*8-K.*");
+		EdgarFiling filing = list.get(0);
+
+		System.out.println("text:"+filing.getXBRL().getCombinedTextValues());
+		Assert.assertFalse(filing.getXBRL().getCombinedTextValues().get(0).getValue()!=null);
+	}
+	
+	
+	
+	@Test
+	public void testTable() throws Exception {
+		List<EdgarFiling> list = EdgarFiling.list(".*8-K.*");
+		EdgarFiling filing = list.get(0);
+
+		XBRL xbrl = filing.getXBRL();
+		ITable<Value> table = xbrl.toTable();
+		System.out.println(new TableFormatterCSV().format(table));
+		Assert.assertTrue(table.getRowCount()>0);
+		Assert.assertTrue(table.getColumnCount()>0);
+		
+	}
+
+	
+
+}

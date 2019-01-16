@@ -1,0 +1,29 @@
+package ch.pschatzmann.edgar.test;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import ch.pschatzmann.common.table.TableFormatterCSV;
+import ch.pschatzmann.edgar.base.errors.DataException;
+import ch.pschatzmann.edgar.reporting.EdgarModel;
+import ch.pschatzmann.edgar.reporting.marketshare.MarketShare;
+import ch.pschatzmann.edgar.reporting.marketshare.ValuesByCompanyAndYear;
+
+public class TestMarketShare {
+
+
+	@Test
+	public void testSalesByCompany() throws Exception {
+		ValuesByCompanyAndYear sales = new ValuesByCompanyAndYear();
+		System.out.println(new TableFormatterCSV().format(sales));
+	}	
+	
+	@Test
+	public void testMarketShare() throws Exception {
+		MarketShare sales = new MarketShare();
+		System.out.println(new TableFormatterCSV().format(sales));		
+	}	
+	
+
+
+}

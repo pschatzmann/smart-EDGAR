@@ -1,0 +1,142 @@
+package ch.pschatzmann.edgar.table;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
+import ch.pschatzmann.common.table.TableCalculated;
+
+/**
+ * Calculates the forecasted value for the indicated row.
+ * We calculate the trend with a linear regression and predict the value with 
+ * the average seasonal factors
+ * 
+ * @author pschatzmann
+ *
+ */
+public class Forecast {
+	private TableCalculated table;
+	private List<String> parameterNames;
+	private boolean forecastSeason;
+	
+	public Forecast(TableCalculated table, boolean forecastSeason) {
+		this.forecastSeason = forecastSeason;
+		this.table = table;
+		this.parameterNames = IntStream.range(0, table.getColumnCount())
+		    .mapToObj(col -> table.getColumnTitle(col))
+		    .collect(Collectors.toList());
+	}
+
+	public Double forecast(String parameter, int row) {
+		Double result = null;
+		if (row>1) {
+			// get history
+			List<ForecastValue> past = getHistory(parameter, row-1);
+
+			// Execute regression for each step to calculate the trend
+			List<Double> pastValues = past.stream().map(v -> v.value).collect(Collectors.toList());
+			past.stream().forEach(fv -> fv.valueRegression =  linearRegressionFor(fv.index, pastValues));
+
+			ForecastValue current = past.get(past.size()-1);
+			int currentSeason = current.seasonIndex;
+
+			// Calculate Season Factors 
+			List<Double> seasonFactors = past.stream()
+			    .filter(fv -> fv.seasonIndex == currentSeason)
+			    .map(fv -> fv.value / fv.valueRegression)
+			    .filter(p -> Double.isFinite(p) && p!=0.0)
+			    .collect(Collectors.toList());
+			
+			Double predictedSeasonFactor = linearRegressionFor(seasonFactors.size(), seasonFactors);
+			Double avg = seasonFactors.stream().mapToDouble(f -> f).average().getAsDouble();
+			Double factor = this.forecastSeason ? predictedSeasonFactor : avg;
+			
+			// Calculate cumulated result with predicted value
+			result = current.predictCumulated(factor);	
+		}
+		
+		return result;
+	}
+
+	protected List<ForecastValue> getHistory(String parameterName, int toRow) {
+		int col = this.parameterNames.indexOf(parameterName);
+		List<ForecastValue> values = new ArrayList();
+		// history
+		for (int row = 0; row <= toRow; row++) {
+			Number value = table.eval(row, table.getColumnTitle(col));
+			values.add(new ForecastValue(values,row,value));
+		}
+		// forecasted current value
+		values.add(new ForecastValue(values, values.size(), null));
+		return values;
+	}
+
+	protected double linearRegressionFor(int row, List<Double> past) {
+		double regressionResult = 0;
+		if (past.size()>1) {
+			SimpleRegression regression = new SimpleRegression();
+			for (int j=0;j<past.size();j++) {
+				regression.addData(j, past.get(j));
+			}
+			regressionResult = regression.predict(row);
+		} else if (past.size()==1){
+			regressionResult = past.get(0);
+		}
+		return regressionResult;
+	}
+	
+	
+	protected class ForecastValue {
+		public int index;
+		public int seasonIndex=0;
+		public double valueCumulated=0;
+		public double value=0;
+		public double valueRegression=0;
+		public ForecastValue prior=null;
+		
+		public ForecastValue(List<ForecastValue> list, int index, Number valueNumber) {
+			this.index = index;
+			if (index>0) {
+				prior = list.get(index-1);
+				if (valueNumber!=null) {
+					try {
+						this.valueCumulated = valueNumber.doubleValue();
+						if (index>=1 && this.valueCumulated  > list.get(index-1).valueCumulated) {
+							this.seasonIndex = prior.seasonIndex + 1;
+							this.value = this.valueCumulated - prior.valueCumulated;
+						} else {
+							seasonIndex = 0;
+							this.value = this.valueCumulated;
+						}
+					} catch(Exception ex) {
+						ex.printStackTrace();
+					}
+				} else {
+					this.seasonIndex = (prior.seasonIndex + 1);
+					if (this.seasonIndex==4) this.seasonIndex = 0;
+				}
+			}
+		}
+		
+		public Double predictCumulated(Double factor) {
+			Double result = null;
+			if (prior!=null) {
+				if (factor !=null && Double.isFinite(factor)) {
+					double current = this.valueRegression * factor.doubleValue();
+					result = prior.seasonIndex==3 ? current : prior.valueCumulated+current;
+				}
+			}
+			return result;
+		}
+
+		public String toString() {
+			return Double.toString(value);
+		}
+		
+	}
+	
+}

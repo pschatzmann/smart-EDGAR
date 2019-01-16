@@ -1,0 +1,8 @@
+/**
+ * Automatic generation of SQL request to provide company parameters
+ * 
+ * 
+ * @author pschatzmann
+ *
+ */
+package ch.pschatzmann.edgar.reporting.company;

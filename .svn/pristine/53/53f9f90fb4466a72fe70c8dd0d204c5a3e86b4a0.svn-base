@@ -1,0 +1,10 @@
+package ch.pschatzmann.edgar.formatter;
+
+public class RemoveValueFormatter implements IValueFormatter {
+
+	@Override
+	public String format(String value) {
+		return null;
+	}
+
+}

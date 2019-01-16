@@ -1,0 +1,35 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.List;
+import java.util.function.Function;
+
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * Returns all 10-K entries for 12 months or 0 months 
+ * @author pschatzmann
+ *
+ */
+public class FilterYearly implements Function<Integer, Boolean> {
+	private ITable table;
+	private int formPos;
+	private int monthsPos;
+	
+	public FilterYearly(ITable table){
+		this.table = table;
+		formPos = table.getRowFieldNames().indexOf("form");
+		monthsPos = table.getRowFieldNames().indexOf("numberOfMonths");
+		if (monthsPos<0) {
+			throw new RuntimeException("The table needs to contain the field 'numberOfMonths'");
+		}
+		if (formPos<0) {
+			throw new RuntimeException("The table needs to contain the field 'form'");
+		}
+	}
+
+	@Override
+	public Boolean apply(Integer row) {
+		List<String> values = table.getRowValue(row);
+		return values.get(formPos).equals("10-K") && values.get(monthsPos).matches("12|0");
+	}
+}

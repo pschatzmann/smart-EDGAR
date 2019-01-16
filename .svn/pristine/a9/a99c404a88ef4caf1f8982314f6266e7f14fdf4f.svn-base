@@ -1,0 +1,109 @@
+package ch.pschatzmann.edgar.dataload.rss;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.List;
+import java.util.TreeSet;
+
+import org.apache.log4j.Logger;
+
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.FeedException;
+import com.rometools.rome.io.SyndFeedInput;
+import com.rometools.rome.io.XmlReader;
+
+import ch.pschatzmann.edgar.base.errors.NoNewDataException;
+import ch.pschatzmann.edgar.utils.Utils;
+
+/**
+ * Access EDGAR RSS information in order to identify the available data
+ * 
+ * @author pschatzmann
+ *
+ */
+
+public class RSSDataSource {
+	private static final Logger LOG = Logger.getLogger(RSSDataSource.class);
+
+	/**
+	 * Determines all relevant Edgar RSS url sources
+	 * 
+	 * @param history
+	 * @return
+	 */
+	private Collection<String> getRss(boolean history) {
+		String rss = Utils.getProperty("rssSource", "https://www.sec.gov/Archives/edgar/usgaap.rss.xml");
+		String minPeriod = Utils.getProperty("minPeriod", "2005-04");
+		String monthlyRSS = Utils.getProperty("monthlyRSS",
+				"https://www.sec.gov/Archives/edgar/monthly/xbrlrss-%1.xml");
+
+		Collection<String> result = new ArrayList();
+		result.add(rss);
+
+		if (history) {
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+
+			int year = 0;
+			while (true) {
+				try {
+					year = cal.get(Calendar.YEAR);
+					int month = cal.get(Calendar.MONTH);
+					String period = year + "-" + String.format("%02d", month + 1);
+					// we stop the processing if the date is before april 2005 or
+					// the indicated start date
+					if (period.compareTo(minPeriod) < 0 || period.compareTo("2005-04") < 0) {
+						break;
+					}
+					LOG.info("period " + period);
+					rss = monthlyRSS;
+					result.add(rss.replace("%1", period));
+					cal.add(Calendar.MONTH, -1);
+				} catch (Exception ex) {
+					LOG.error(ex, ex);
+				}
+			}
+		}
+		LOG.debug(result);
+		return result;
+	}
+
+	/**
+	 * Provides the collection of FeedInfoRecord objects which can be downloaded
+	 * from Edgar to the local file system.
+	 * 
+	 * @param history
+	 * @param formRegex
+	 * @return
+	 * @throws IllegalArgumentException
+	 * @throws MalformedURLException
+	 * @throws FeedException
+	 * @throws IOException
+	 */
+	public Collection<FeedInfoRecord> getData(boolean history, String formRegex)
+			throws IllegalArgumentException, MalformedURLException, FeedException, IOException {
+		Collection<FeedInfoRecord> result = new TreeSet();
+
+		for (String feedUrl : this.getRss(history)) {
+			SyndFeedInput input = new SyndFeedInput();
+			SyndFeed feed = input.build(new XmlReader(new URL(feedUrl)));
+
+			for (SyndEntry entry : feed.getEntries()) {
+				FeedInfoRecord info = new FeedInfoRecord(entry);
+				// info.setPeriod(period);
+				String form = info.getForm();
+				if (form.matches(formRegex)) {
+					result.add(info);
+				} else {
+					LOG.trace("Igored because '" + form + "' does not match with '" + formRegex + "'");
+				}
+			}
+		}
+		return result;
+	}
+}

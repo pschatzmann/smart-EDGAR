@@ -1,0 +1,232 @@
+package ch.pschatzmann.edgar.base;
+
+import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.log4j.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ch.pschatzmann.edgar.base.Fact.Attribute;
+import ch.pschatzmann.edgar.base.Fact.Type;
+import ch.pschatzmann.edgar.utils.Utils;
+
+/**
+ * Context for the calculation of the date and segment attribute
+ * 
+ * @author pschatzmann
+ *
+ */
+public class Context implements Serializable, Comparable<Context> {
+	private static final Logger LOG = Logger.getLogger(Context.class);
+	private static Fact EMPTY = new Fact(null, null, 0, 0);
+	private XBRL xbrl;
+	private String id;
+	private Fact contextFact = null;
+	private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	private List<Segment> segments = null;
+	private String segmentDescription = null;
+	private String dimensionDescription = null;
+
+	public Context(XBRL xbrl, String id) {
+		this.xbrl = xbrl;
+		this.id = id;
+		if (xbrl != null && id != null) {
+			contextFact = xbrl.getIndex().find1(this.id, Arrays.asList(Type.context), EMPTY);
+		}
+	}
+	
+
+	public boolean isValid() {
+		return contextFact !=null && !contextFact.getAttributes().isEmpty();
+	}
+
+	public String getID() {
+		return this.id == null ? "" : this.id;
+	}
+
+	public String getDate() {
+		List<Fact> list = contextFact.getFacts(Arrays.asList(Type.endDate, Type.instant), true, 0, Integer.MAX_VALUE);
+		String result = "";
+		for (Fact f : list) {
+			result = f.getAttribute(f.getType().name());
+		}
+		return result;
+	}
+
+	/**
+	 * Determines the number of months for the indicated period
+	 * 
+	 * @return
+	 */
+	public Integer getMonths()  {
+		long result = 0;
+		try {
+			List<Fact> listEnd = contextFact.getFacts(Arrays.asList(Type.endDate), true, 0, Integer.MAX_VALUE);
+			List<Fact> listStart = contextFact.getFacts(Arrays.asList(Type.startDate), true, 0, Integer.MAX_VALUE);
+			if (!listEnd.isEmpty() && !listStart.isEmpty() ) {
+				Date start = getDate(listStart,0);
+				Date end = getDate(listEnd, listEnd.size()-1);
+			    result = getMonths(start, end);
+			}
+		} catch(Exception ex) {
+			LOG.error(ex,ex);
+		}
+		return (int) result;
+	}
+
+	public long getMonths(Date start, Date end) {
+		long result;
+		long difference = end.getTime() - start.getTime();
+		double days = (difference / (1000*60*60*24));
+		result = Math.round(days / 30.0);
+		return result;
+	}
+	
+	private Date getDate(List<Fact> list, int pos) throws ParseException {
+		Fact f = list.get(pos);
+		String timeStr = f.getAttribute(f.getType().name());
+		return getDate(timeStr);
+	}
+
+	public Date getDate(String timeStr) throws ParseException {
+		return dateFormat.parse(timeStr);
+	}
+
+	@JsonIgnore
+	public Integer getMonthsOld() {
+		int result = 0;
+		Calendar start = new GregorianCalendar();
+		Calendar end = new GregorianCalendar();
+		List<Fact> list = contextFact.getFacts(Arrays.asList(Type.endDate), true, 0, Integer.MAX_VALUE);
+		for (Fact f : list) {
+			try {
+				String timeStr = f.getAttribute(f.getType().name());
+				if (!Utils.isEmpty(timeStr)) {
+					end.setTime(getDate(timeStr));
+					end.add(Calendar.DATE, 1);
+					list = contextFact.getFacts(Arrays.asList(Type.startDate), true, 0, Integer.MAX_VALUE);
+					for (Fact f1 : list) {
+						start.setTime(dateFormat.parse((f1.getAttribute(f1.getType().name()))));
+					}
+					int diffYear = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
+					result = diffYear * 12 + end.get(Calendar.MONTH) - start.get(Calendar.MONTH);
+				}
+			} catch (Exception ex) {
+				LOG.error(ex, ex);
+			}
+		}
+		return result;
+	}
+	
+
+	/**
+	 * Determines the label for the context id
+	 * 
+	 * @return
+	 */
+	public String getDateDescription() {
+		StringBuffer sb = new StringBuffer();
+		try {
+			List<Fact> list = contextFact.getFacts(Arrays.asList(Type.startDate, Type.endDate, Type.instant), true, 0,
+					Integer.MAX_VALUE);
+			for (Fact f : list) {
+				if (sb.length() > 0) {
+					sb.append(" to ");
+				}
+				sb.append(f.getAttribute(f.getType().name()));
+			}
+		} catch(Exception ex) {
+			LOG.error(ex,ex);
+		}
+		return sb.toString();
+	}
+
+	public boolean isWithSegments() {
+		return this.getSegments().iterator().hasNext();
+	}
+
+	public List<Segment> getSegments() {
+		if (segments == null) {
+			segments = new ArrayList();
+			for (Fact f : contextFact.getFacts(Arrays.asList(Type.explicitMember), true, 0, Integer.MAX_VALUE)) {
+				String value = f.getAttribute(Attribute.explicitMember);
+				String id = Utils.lastPath(value);
+				String description = xbrl.getLabelAPI().getLabel(Utils.lastPath(id)).getLabel();
+				String dimensionID = Utils.lastPath(f.getAttribute(Attribute.dimension));
+				String dimensionDescription = xbrl.getLabelAPI().getLabel(dimensionID).getLabel();
+				segments.add(new Segment(id, description, dimensionID, dimensionDescription));
+			}
+		}
+		return segments;
+	}
+
+	public String getCompanyIdentifier() {
+		String result = "";
+		for (Fact f : contextFact.getFacts(Arrays.asList(Type.identifier), true, 0, Integer.MAX_VALUE)) {
+			result = f.getAttribute(Attribute.identifier);
+		}
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(Utils.toString(this.getSegments(), "", "/"));
+		sb.append(" ");
+		sb.append(this.getDateDescription());
+		return sb.toString();
+	}
+
+	@Override
+	public int compareTo(Context o) {
+		int result = getSegmentDescription().compareTo(o.getSegmentDescription());
+		if (result == 0) {
+			result = this.getMonths().compareTo(o.getMonths());
+			if (result == 0) {
+				result = this.getDateDescription().compareTo(o.getDateDescription());
+			}
+		}
+		return result;
+	}
+
+	public String getSegmentDescription() {
+		if (this.segmentDescription == null) {
+			List<String> list = this.getSegments().stream().map(s -> s.getDescription()).collect(Collectors.toList());
+			segmentDescription = Utils.toString(list, "", "/");
+		}
+		return this.segmentDescription;
+	}
+
+	public String getDimensionDescription() {
+		if (this.dimensionDescription == null) {
+			List<String> list = this.getSegments().stream().map(s -> s.getDimensionDescription())
+					.collect(Collectors.toList());
+			dimensionDescription = Utils.toString(list, "", "/");
+		}
+		return this.dimensionDescription;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.getID().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		Context ctx = (Context) obj;
+		return this.getID().equals(ctx.getID());
+	}
+
+}

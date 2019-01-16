@@ -1,0 +1,78 @@
+package ch.pschatzmann.edgar.reporting.filter;
+
+import java.util.List;
+import java.util.function.Function;
+
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * Returns all 10-K entries for 12 months or 0 months
+ * 
+ * @author pschatzmann
+ *
+ */
+public class FilterQuarterlyCumulated implements Function<Integer, Boolean> {
+	private ITable table;
+	private int formPos;
+	private int monthsPos;
+
+	public FilterQuarterlyCumulated(ITable table) {
+		this.table = table;
+		formPos = table.getRowFieldNames().indexOf("form");
+		monthsPos = table.getRowFieldNames().indexOf("numberOfMonths");
+		if (monthsPos<0) {
+			throw new RuntimeException("The table needs to contain the field 'numberOfMonths'");
+		}
+		if (formPos<0) {
+			throw new RuntimeException("The table needs to contain the field 'form'");
+		}
+	}
+
+	@Override
+	public Boolean apply(Integer row) {
+		List<String> values = table.getRowValue(row);
+		return values.get(formPos).equals("10-K") && values.get(monthsPos).matches("12|0")
+				|| values.get(formPos).equals("10-Q") && values.get(monthsPos).matches("6|9|0")
+				|| values.get(formPos).equals("10-Q") && values.get(monthsPos).matches("6|9|0") && isFirstQuarter(row);
+	}
+
+	/**
+	 * An entry belongs to the first quarter if there are no prior entries or if the
+	 * prior filing is a 10-K
+	 * 
+	 * @param row
+	 * @return
+	 */
+	protected boolean isFirstQuarter(Integer row) {
+		List<String> values = table.getRowValue(row);
+		String company = getCompany(row);
+		String date = values.get(monthsPos);
+		for (int j = row; j >= 0; j--) {
+			if (this.getCompany(row).equals(company)) {
+				if (!values.get(monthsPos).equals(date)) {
+					return values.get(formPos).equals("10-K");
+				}
+			} else {
+				return true;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Determines the company information
+	 * 
+	 * @param row
+	 * @return
+	 */
+	protected String getCompany(Integer row) {
+		int pos = table.getRowFieldNames().indexOf("companyName");
+		if (pos < 0) {
+			pos = table.getRowFieldNames().indexOf("tradingSymbol");
+			if (pos < 0) {
+				pos = table.getRowFieldNames().indexOf("identifier");
+			}
+		}
+		return pos < 0 ? "" : table.getRowValue(row).get(pos);
+	}
+}

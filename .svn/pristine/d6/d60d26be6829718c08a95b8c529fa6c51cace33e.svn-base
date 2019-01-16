@@ -1,0 +1,45 @@
+package ch.pschatzmann.edgar.test;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValues;
+import ch.pschatzmann.edgar.reporting.company.CompanySelection;
+import ch.pschatzmann.edgar.reporting.company.FilterQuarterlyCumulated;
+import ch.pschatzmann.edgar.reporting.company.FilterYearly;
+
+public class TestCompanySelection {
+	@Test
+	public void test() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setParameterNames("NetIncomeLoss");
+
+		System.out.println(values.size());
+
+	}
+	
+	@Test
+	public void testYearly() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setFilter(new FilterYearly());
+
+		System.out.println(values.size());
+
+	}
+
+	@Test
+	public void testQuarterlyCumulated() throws Exception {
+		CompanyEdgarValues values = new CompanyEdgarValues(new CompanySelection().setTradingSymbol("AAPL"))
+			.setFilter(new FilterQuarterlyCumulated());
+
+		System.out.println(values.size());
+		Set<String> period = values.toList().stream().map(r -> r.get("numberOfMonths").toString()).collect(Collectors.toSet());
+		Assert.assertArrayEquals("periods do not match", Arrays.asList("0","3","6","9","12").toArray(), period.toArray());
+	}
+
+
+}

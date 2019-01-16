@@ -1,0 +1,37 @@
+package ch.pschatzmann.edgar.test;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import ch.pschatzmann.common.table.TableFormatterCSV;
+import ch.pschatzmann.edgar.reporting.marketshare.MarketShare;
+import ch.pschatzmann.edgar.reporting.marketshare.SalesByCompanyAndYear;
+import ch.pschatzmann.edgar.reporting.marketshare.SalesBySectorAndYear;
+
+public class TestMarketShare {
+	static SalesBySectorAndYear sales;
+
+	@Test
+	public void testSalesBySector() throws Exception {
+		sales = new SalesBySectorAndYear();
+		System.out.println(new TableFormatterCSV().format(sales));
+		
+		Assert.assertNotNull(sales.getTotalSales("2017", "1000"));
+		Assert.assertNotNull(sales.getTotalSales("2019", "1000"));
+	}	
+
+	@Test
+	public void testSalesByCompany() throws Exception {
+		SalesByCompanyAndYear sales = new SalesByCompanyAndYear();
+		System.out.println(new TableFormatterCSV().format(sales));
+		
+	}	
+	
+	@Test
+	public void testMarketShare() throws Exception {
+		MarketShare sales = new MarketShare();
+		System.out.println(new TableFormatterCSV().format(sales));		
+	}	
+
+
+}

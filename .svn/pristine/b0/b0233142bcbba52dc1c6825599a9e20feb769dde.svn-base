@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<enunciate
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-2.9.0.xsd">
+  
+    <description>
+    <![CDATA[
+      <h1>Smart Edgar</h1>
+      <p>A REST api to Edgar filings</p>
+    ]]>
+  </description>
+  
+  
+  <api-classes>
+    <include pattern="ch.pschatzmann.edgar.service.EdgarService"/>
+  </api-classes>
+</enunciate>

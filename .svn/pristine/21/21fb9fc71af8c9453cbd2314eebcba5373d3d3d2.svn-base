@@ -1,0 +1,61 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiFunction;
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * Returns all 10-K entries for 12 months or 0 months. We need to filter out all
+ * balance sheet values which have been reported by 10-K for the quarters
+ * because we just want to have the end of year values
+ * 
+ * @author pschatzmann
+ *
+ */
+public class FilterYearly implements BiFunction<ITable, Integer, Boolean> {
+	private ITable table;
+	private int formPos;
+	private int monthsPos;
+	private int datePos;
+	private Set<String> validDates = new TreeSet();
+
+	public FilterYearly() {
+	}
+
+	@Override
+	public Boolean apply(ITable table, Integer row) {
+		setup(table);
+		List<String> values = table.getRowValue(row);
+		return validDates.contains(values.get(datePos)) && values.get(formPos).equals("10-K")
+				&& values.get(monthsPos).matches("12|0");
+	}
+
+	protected void setup(ITable table) {
+		if (this.table != table) {
+			this.table = table;
+			formPos = table.getRowFieldNames().indexOf("form");
+			monthsPos = table.getRowFieldNames().indexOf("numberOfMonths");
+			datePos = table.getRowFieldNames().indexOf("date");
+			if (monthsPos < 0) {
+				throw new RuntimeException("The table needs to contain the field 'numberOfMonths'");
+			}
+			if (formPos < 0) {
+				throw new RuntimeException("The table needs to contain the field 'form'");
+			}
+			if (datePos < 0) {
+				throw new RuntimeException("The table needs to contain the field 'date'");
+			}
+
+			for (int j = 0; j < table.getRowCount(); j++) {
+				List<String> values = table.getRowValue(j);
+				if (values.get(formPos).equals("10-K") && values.get(monthsPos).equals("12")) {
+					validDates.add(values.get(datePos));
+				}
+			}
+
+		}
+	}
+
+}

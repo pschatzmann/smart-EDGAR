@@ -1,0 +1,14 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.function.BiFunction;
+
+import ch.pschatzmann.common.table.ITable;
+
+/**
+ * 
+ * @author pschatzmann
+ *
+ */
+public interface IFilter extends BiFunction<ITable, Integer, Boolean> {
+	default String getFileNameRegex() {return ".*";}
+}

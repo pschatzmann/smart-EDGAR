@@ -1,0 +1,20 @@
+package ch.pschatzmann.edgar.reporting.company;
+
+import java.util.function.Function;
+
+/**
+ * Returns all 10-K entries for 12 months or 0 months
+ * 
+ * @author pschatzmann
+ *
+ */
+public class NoFilter implements Function<Integer, Boolean> {
+
+	public NoFilter() {
+	}
+
+	@Override
+	public Boolean apply(Integer row) {
+		return true;
+	}
+}

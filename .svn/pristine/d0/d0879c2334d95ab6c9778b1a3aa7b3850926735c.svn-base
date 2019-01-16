@@ -1,0 +1,157 @@
+package ch.pschatzmann.edgar.test;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import ch.pschatzmann.common.table.TableFormatterCSV;
+import ch.pschatzmann.common.table.TableFormatterHtml;
+import ch.pschatzmann.common.table.TableFormatterJson;
+import ch.pschatzmann.edgar.reporting.EdgarModel;
+import ch.pschatzmann.edgar.reporting.Table;
+import ch.pschatzmann.edgar.reporting.TableFormatterSQL;
+import ch.pschatzmann.edgar.utils.Utils;
+
+/**
+ * Tests for the class EdgarModel
+ * @author pschatzmann
+ *
+ */
+public class TestReporting {
+	@Test
+	public void test3Tables() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		Table table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		table.addRow(model.getNavigationField("values","year",null));
+		table.addColumn(model.getNavigationField("states","country","location"));
+		String sql = new TableFormatterSQL(model).format(table);
+		System.out.println(sql);
+		Assert.assertEquals(2, Utils.wordCount(sql, "JOIN"));
+	}
+	
+	@Test
+	public void test1Table() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		Table table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		table.addRow(model.getNavigationField("values", "identifier", null));
+		table.addColumn(model.getNavigationField("values", "year", null));
+		String sql = new TableFormatterSQL(model).format(table);
+		System.out.println(sql);
+		Assert.assertEquals(0, Utils.wordCount(sql, "JOIN"));
+	}
+	
+	@Test
+	public void test2Table() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		Table table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		table.addRow(model.getNavigationField("company", "companyname", null));
+		table.addColumn(model.getNavigationField("values", "year", null));
+		String sql = new TableFormatterSQL(model).format(table);
+		System.out.println(sql);
+		Assert.assertEquals(1, Utils.wordCount(sql, "JOIN"));
+	}
+	
+	
+	@Test
+	public void testData() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		model.getTableField("values", "numberofmonths").setFilterValues(Arrays.asList("12"));
+		model.getTableField("values", "form").setFilterValues(Arrays.asList("10-K","10-K/A"));
+		model.getTableField("values", "unitref").setFilterValues(Arrays.asList("USD"));
+		model.getTableField("values", "segment").setFilterValues(Arrays.asList(""));
+		model.getTableField("values", "segmentdimension").setFilterValues(Arrays.asList(""));
+		
+		Table table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		table.addColumn(model.getNavigationField("values","year",null));
+		table.addRow(model.getNavigationField("states","country","location"));
+		
+		String sql = new TableFormatterSQL(model).format(table);
+		System.out.println(sql);
+		
+		table.execute(model);
+		System.out.println(new TableFormatterCSV().format(table));
+		System.out.println(new TableFormatterHtml().format(table));
+		System.out.println(new TableFormatterJson().format(table));
+
+		Assert.assertTrue(table.getRowCount()>0);
+		
+	}
+	
+	@Test
+	public void testDataNoColumns() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		model.getTableField("values", "numberofmonths").setFilterValues(Arrays.asList("12"));
+		model.getTableField("values", "segment").setFilterValues(Arrays.asList(""));
+		model.getTableField("values", "segmentdimension").setFilterValues(Arrays.asList(""));
+		model.getTableField("values", "form").setFilterValues(Arrays.asList("10-K","10-K/A"));
+		model.getTableField("values", "unitref").setFilterValues(Arrays.asList("USD"));
+		
+		Table table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		//table.addColumn(model.getNavigationField("values","year",null));
+		table.addRow(model.getNavigationField("states","country","location"));
+		
+		String sql = new TableFormatterSQL(model).format(table);
+		System.out.println(sql);
+		
+		table.execute(model);
+		System.out.println(new TableFormatterCSV().format(table));
+		System.out.println(new TableFormatterHtml().format(table));
+
+		Assert.assertTrue(table.getRowCount()>0);
+		
+	}
+	
+	@Test
+	public void testDataNoRows() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		model.getTableField("values", "numberofmonths").setFilterValues(Arrays.asList("12"));
+		model.getTableField("values", "form").setFilterValues(Arrays.asList("10-K","10-K/A"));
+		model.getTableField("values", "unitref").setFilterValues(Arrays.asList("USD"));
+		model.getTableField("values", "segment").setFilterValues(Arrays.asList(""));
+		model.getTableField("values", "segmentdimension").setFilterValues(Arrays.asList(""));
+		
+		Table table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		table.addColumn(model.getNavigationField("values","year",null));
+		//table.addRow(model.getNavigationField("states","country","location"));
+		
+		String sql = new TableFormatterSQL(model).format(table);
+		System.out.println(sql);
+		
+		table.execute(model);
+		System.out.println(new TableFormatterCSV().format(table));
+		System.out.println(new TableFormatterHtml().format(table));
+
+		Assert.assertTrue(table.getRowCount()>0);		
+	}
+	
+	@Test
+	public void testGrouping() throws Exception {
+		EdgarModel model = new EdgarModel();
+		model.create();
+		model.getTableField("values", "numberofmonths").setFilterValues(Arrays.asList("12"));
+		model.getTableField("values", "segment").setFilterValues(Arrays.asList(""));
+		model.getTableField("values", "segmentdimension").setFilterValues(Arrays.asList(""));
+		List<String> groupings = model.getGroupings();
+		System.out.println(groupings);
+		List fields = model.getNavigationFieldForGrouping(groupings.get(0));
+		System.out.println(fields);
+		
+	}
+		
+		
+
+}

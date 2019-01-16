@@ -1,0 +1,127 @@
+package ch.pschatzmann.edgar.reporting.marketshare;
+
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import ch.pschatzmann.common.table.ITable;
+import ch.pschatzmann.edgar.base.errors.DataException;
+import ch.pschatzmann.edgar.reporting.EdgarModel;
+import ch.pschatzmann.edgar.reporting.Table;
+import ch.pschatzmann.edgar.reporting.Table.CombinedKey;
+import ch.pschatzmann.edgar.reporting.Table.Key;
+
+/**
+ * Calculates the Total of all "Sales" per Sector for each year
+ * 
+ * @author pschatzmann
+ *
+ */
+public class SalesBySectorAndYear implements ITable<Number> {
+	private static final long serialVersionUID = 1L;
+	private Table table;
+
+	public SalesBySectorAndYear() throws DataException, ClassNotFoundException, SQLException {
+		EdgarModel model = new EdgarModel();
+		model.setParameterAsPriorityAlternatives(true);
+		model.create();
+		model.getNavigationField("values", "unitref").setFilterValues("USD");
+		model.getNavigationField("values", "segment").setFilterValues("");
+		model.getNavigationField("values", "segmentdimension").setFilterValues("");
+		model.getNavigationField("values", "form").setFilterValues("10-K");
+		model.getNavigationField("values", "parameterName").setFilterValues("Revenues","SalesRevenueNet");
+		model.getNavigationField("values", "numberOfMonths").setFilterValues("12");
+
+		this.table = new Table();
+		table.setValueField(model.getTable("values").getValueField());
+		table.addColumn(model.getNavigationField("values", "year", null));
+		table.addRow(model.getNavigationField("company", "sicCode", null));
+		table.execute(model);
+	}
+
+	@Override
+	public List getRowFieldNames() {
+		return table.getRowFieldNames();
+	}
+
+	@Override
+	public int getColumnCount() {
+		return table.getColumnCount();
+	}
+
+	@Override
+	public String getColumnTitle(int col) {
+		return table.getColumnTitle(col);
+	}
+
+	@Override
+	public int getRowCount() {
+		return table.getRowCount();
+	}
+
+	@Override
+	public List getRowValue(int row) {
+		return table.getRowValue(row);
+	}
+
+	@Override
+	public Number getValue(int col, int row) {
+		return this.table.getValue(col, row);
+	}
+
+	@Override
+	public ITable<Number> getBaseTable() {
+		return this.table;
+	}
+
+	/**
+	 * We return the sales for the requested SIC code and year. Please note that if
+	 * we do not have the data for the full year available we report the last full
+	 * year instead
+	 * 
+	 * @param year
+	 * @param sicCode
+	 * @return
+	 * @throws ParseException
+	 */
+	public Double getTotalSales(String year, String sicCode) throws ParseException {
+		String maxYear = getMaxYear(year);
+		CombinedKey key = new CombinedKey(new Key(Arrays.asList(maxYear)), new Key(Arrays.asList(sicCode)));
+		return table.getValue(key).doubleValue();
+	}
+
+	/**
+	 * Determines the max year where we have all data available 
+	 * @param year
+	 * @return
+	 * @throws ParseException
+	 */
+	public static String getMaxYear(String year) throws ParseException {
+		int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+		int lastYear = currentYear - 1;
+		int lastYear2 = currentYear - 2;
+		int requestedYear = Integer.parseInt(year);
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+
+		// we can never report the current year
+		// the last year is available from April of the current year
+		String result = null;
+		if (requestedYear < lastYear2) {
+			result = year;
+		} else {
+			Date currentDate = new Date();
+			if (currentDate.after(df.parse(currentYear + "-04-05"))) {
+				result = "" + lastYear;
+			} else {
+				result = "" + lastYear2;
+			}
+		}
+		return result;
+	}
+
+}
