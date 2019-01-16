@@ -22,6 +22,7 @@ import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvi
 
 import ch.pschatzmann.common.table.ITable;
 import ch.pschatzmann.common.utils.Tuple;
+import ch.pschatzmann.edgar.base.EdgarCompany;
 import ch.pschatzmann.edgar.base.ICompany;
 import ch.pschatzmann.edgar.base.errors.DataException;
 import ch.pschatzmann.edgar.service.CompanyValues;

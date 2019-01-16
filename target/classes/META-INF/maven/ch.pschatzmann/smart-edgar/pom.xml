@@ -4,13 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ch.pschatzmann</groupId>
 	<artifactId>smart-edgar</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>smart-edgar</name>
 
 	<properties>
 		<additionalparam>-Xdoclint:none</additionalparam>
-		<version.jersey>2.22.2</version.jersey>
-		<version.jackson>2.6.5</version.jackson>
+		<version.jersey>2.27</version.jersey>
+		<version.jackson>2.9.8</version.jackson>
 	</properties>
 
 	<build>
@@ -79,34 +79,22 @@
 		<dependency>
 			<groupId>com.rometools</groupId>
 			<artifactId>rome</artifactId>
-			<version>1.7.0</version>
+			<version>1.12.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
+			<version>1.7.25</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.5</version>
-		</dependency>
-		<dependency>
-			<groupId>com.rabbitmq</groupId>
-			<artifactId>amqp-client</artifactId>
-			<version>4.1.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.influxdb</groupId>
-			<artifactId>influxdb-java</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
+			<version>1.7.25</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>9.4.1209</version>
+			<version>42.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -160,9 +148,14 @@
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-jaxb</artifactId>
-			<version>2.22.2</version>
+			<version>${version.jersey}</version>
 		</dependency>
-
+		<dependency>
+		    <groupId>org.glassfish.jersey.inject</groupId>
+		    <artifactId>jersey-hk2</artifactId>
+		    <version>${version.jersey}</version>	    
+		</dependency>
+		
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -182,7 +175,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-jcs-core</artifactId>
-			<version>2.1</version>
+			<version>2.2.1</version>
 		</dependency>
 
 		<dependency>
@@ -193,7 +186,7 @@
 		<dependency>
 			<groupId>com.workday</groupId>
 			<artifactId>timeseries-forecast</artifactId>
-			<version>RELEASE</version>
+			<version>1.1.1</version>
 		</dependency>
 
 
@@ -231,7 +224,7 @@
 	<distributionManagement>
 		<repository>
 			<id>release</id>
-			<url>http://software.pschatzmann.ch/repository/maven-releases</url>
+			<url>http://nuc.local:8081/repository/maven-releases</url>
 		</repository>
 		<snapshotRepository>
 			<id>snapshots</id>
