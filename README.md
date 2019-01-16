@@ -33,3 +33,4 @@ The Java Library can be installed with the help of Maven from the following repo
 
 ## Further Information
 Further information can be found in <a href="https://www.pschatzmann.ch/home/category/edgar/">my posts</a>
+The Javadoc is available [here](https://pschatzmann.ch/edgar/docs)
