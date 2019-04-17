@@ -119,7 +119,7 @@ public class EdgarCompany implements ICompany, Serializable, Comparable<EdgarCom
 				this.setupTradingSymbol();
 			}
 			
-			if (!this.getTradingSymbol().equals(current)){
+			if (!Utils.equals(this.getTradingSymbol(),current)){
 				save = true;
 			}
 			

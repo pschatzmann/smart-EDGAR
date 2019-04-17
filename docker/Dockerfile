@@ -1,4 +1,4 @@
-FROM openjdk:alpine
+FROM openjdk:13-oracle
 MAINTAINER Phil Schatzmann <pschatzmann@gmail.com>
 RUN mkdir -p /usr/local/bin/SmartEdgar/data
 COPY *.* /usr/local/bin/SmartEdgar/
@@ -10,6 +10,7 @@ ENV formsRegex 10-K.*
 ENV updateIndex true
 ENV minPeriod 2005-04
 ENV xmx 3000m 
+ENV LANG C.UTF-8
 
 EXPOSE 9997
 VOLUME /usr/local/bin/SmartEdgar/data

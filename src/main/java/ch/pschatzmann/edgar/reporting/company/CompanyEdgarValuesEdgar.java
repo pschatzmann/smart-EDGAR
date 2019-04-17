@@ -85,7 +85,7 @@ public class CompanyEdgarValuesEdgar extends CompanyEdgarValuesBase implements I
 					IRowFilter f = (IRowFilter) this.filter;
 					String regex = getRegex(f);
 					// process all XBRL filings
-					new CompanyInformation("AAPL",regex.replaceAll("\\.\\*", "")).stream(regex)
+					new CompanyInformation(identifier,regex.replaceAll("\\.\\*", "")).stream(regex)
 					    .parallel()
 						.filter(e -> e.getXBRL().isPresent())
 						.map(e -> e.getXBRL().get())

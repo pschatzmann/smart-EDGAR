@@ -361,4 +361,14 @@ public class Utils {
 		return Utils.getProperty("destinationFolder","/data/SmartEdgar");
 	}
 
+	/**
+	 * 
+	 * @param s1
+	 * @param s2
+	 * @return
+	 */
+	public static boolean equals(String s1, String s2) {
+		return str(s1).equals(str(s2));
+	}
+
 }

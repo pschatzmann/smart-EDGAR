@@ -148,7 +148,7 @@ public class RSSDataSource {
 	 */
 	public static RSSDataSource createForChanges(boolean history) {
 		RSSDataSource result = new RSSDataSource();
-		result.setRssUrl(Utils.getProperty("rssSource", "https://www.sec.gov/Archives/edgar/usgaap.rss.xml"));
+		result.setRssUrl(Utils.getProperty("rssSource", "https://www.sec.gov/Archives/edgar/xbrlrss.all.xml"));
 		if (history) {
 			result.setMonthlyRSSUrl(Utils.getProperty("monthlyRSS", "https://www.sec.gov/Archives/edgar/monthly/xbrlrss-%1.xml"));
 		}

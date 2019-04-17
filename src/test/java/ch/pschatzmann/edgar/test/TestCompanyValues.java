@@ -83,6 +83,28 @@ public class TestCompanyValues {
 		Assert.assertTrue(((Number) values.toList().get(4).get("NetIncomeLoss")).doubleValue() > 0.0);
 		
 	}
+	
+	@Test
+	public void testCompanyEdgarValuesEdgarIntl() throws Exception {
+		CompanyEdgarValuesBase values = new CompanyEdgarValuesEdgar(new EdgarCompany("INTL"))
+			.setFilter(new FilterYearly())
+			.setParameterNames("NetIncomeLoss");
+		
+		System.out.println(values.size());
+		Assert.assertTrue(values.size()>0);
+		
+		List<String> years = (List<String>) values.getTable().getColumnKeyValues("date").stream()
+				.map(s -> s.toString().substring(0,4))
+				.collect(Collectors.toList());
+		System.out.println(years);
+		Assert.assertTrue(years.contains("2008"));
+		Assert.assertTrue(years.contains("2009"));
+		Assert.assertTrue(years.contains("2010"));
+
+		Assert.assertTrue(((Number) values.toList().get(4).get("NetIncomeLoss")).doubleValue() > 0.0);
+		
+	}
+
 
 	@Test
 	public void testCompanyEdgarValuesRest() throws Exception {
@@ -311,7 +333,7 @@ public class TestCompanyValues {
 		
 		System.out.println(new TableFormatterCSV().format(test.getTable()));
 
-		Assert.assertEquals(37.35, ((Value)test.toList().get(1).get("MarketShare")).doubleValue(),0.1);
+		Assert.assertEquals(38.01, ((Value)test.toList().get(1).get("MarketShare")).doubleValue(),0.1);
 		
 	}
 

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+//import javax.xml.bind.annotation.XmlRootElement;
 
 import ch.pschatzmann.edgar.utils.Utils;
 
@@ -17,7 +17,7 @@ import ch.pschatzmann.edgar.utils.Utils;
  *
  */
 
-@XmlRootElement
+//@XmlRootElement
 public class NavigationField extends DBField {
 	private DBRelation relation;
 

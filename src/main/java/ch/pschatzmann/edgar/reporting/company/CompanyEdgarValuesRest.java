@@ -27,6 +27,7 @@ import ch.pschatzmann.edgar.base.errors.DataException;
 import ch.pschatzmann.edgar.service.CompanyValues;
 import ch.pschatzmann.edgar.service.EdgarDBService.PeriodFilter;
 import ch.pschatzmann.edgar.table.TableFromMaps;
+import ch.pschatzmann.edgar.utils.Utils;
 
 /**
  * Provides the reported parameter values for a company by date from the REST
@@ -162,8 +163,9 @@ public class CompanyEdgarValuesRest implements ICompanyInfo {
 	    ClientConfig config = new ClientConfig();
 	    config.register(JacksonJsonProvider.class);
 	    Client client = ClientBuilder.newClient(config);
-
-		WebTarget target = client.target("https://www.pschatzmann.ch/edgar/db/companyValues");
+	    String url = Utils.getProperty("restURL","https://pschatzmann.ch/edgar/db/companyValues");
+	    LOG.info("restURL:"+url);
+		WebTarget target = client.target(url);
 		Response response = target.request().accept(MediaType.TEXT_PLAIN).buildPost(Entity.entity(q,MediaType.APPLICATION_JSON)).invoke();
 		String responseString = response.readEntity(String.class);
 		response.close();

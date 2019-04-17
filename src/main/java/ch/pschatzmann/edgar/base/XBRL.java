@@ -51,9 +51,9 @@ import ch.pschatzmann.edgar.utils.Utils;
 import ch.pschatzmann.edgar.utils.WontCloseBufferedInputStream;
 
 /**
- * XBRL Parser. All XBRL information is loaded from a file or URL into a hierarchical List of Facts
- * where the root represents the top level of each "file" For each fact row we
- * store the attribute values in a key-value map.
+ * XBRL Parser. All XBRL information is loaded from a file or URL into a
+ * hierarchical List of Facts where the root represents the top level of each
+ * "file" For each fact row we store the attribute values in a key-value map.
  * 
  * The name of the XML tag is stored in the type field. The exception are the
  * parameter values of the value xml. We store the parameter value in the
@@ -158,7 +158,7 @@ public class XBRL implements Serializable {
 	 * 
 	 * @param file
 	 */
-	public void load(File file)  {
+	public void load(File file) {
 		try {
 			setImportFileName(file.toString());
 			if (file.isDirectory()) {
@@ -172,7 +172,7 @@ public class XBRL implements Serializable {
 				// just load the file
 				load(file.toURI().toURL());
 			}
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
 	}
@@ -244,7 +244,6 @@ public class XBRL implements Serializable {
 		return fileWithPath.substring(start + 1);
 	}
 
-	
 	protected void resolve(URL url) throws SAXException, IOException, ParserConfigurationException {
 		while (resolveReferences(url)) {
 			LOG.info("References were loaded");
@@ -261,13 +260,13 @@ public class XBRL implements Serializable {
 			while (it.hasNext() && Utils.isEmpty(this.getCompanyNumber())) {
 				String companyNr = ((FactValue) it.next()).getValue();
 				this.setCompanyNumber(companyNr);
-				LOG.info("Setting Company Number from EntityCentralIndexKey: "+companyNr);				
+				LOG.info("Setting Company Number from EntityCentralIndexKey: " + companyNr);
 			}
 			if (Utils.isEmpty(this.getCompanyNumber())) {
 				int start = this.getFilingInfo().getFileName().indexOf("-");
-				if (start>0) {
-					this.setCompanyNumber(this.getFilingInfo().getFileName().substring(0,start));
-					LOG.info("Setting Company Number from Filename: "+this.getCompanyNumber());
+				if (start > 0) {
+					this.setCompanyNumber(this.getFilingInfo().getFileName().substring(0, start));
+					LOG.info("Setting Company Number from Filename: " + this.getCompanyNumber());
 				}
 			}
 		}
@@ -302,9 +301,9 @@ public class XBRL implements Serializable {
 			while (ze != null) {
 				String name = ze.getName();
 				LOG.info(" -> " + name);
-				if (!name.endsWith("htm")) {
+				if (name.endsWith("xml") || name.endsWith("xsd")) {
 					load1(zis, isFactFile(name), true);
-				} else {
+				} else if (name.endsWith("htm") || name.endsWith("html")) {
 					// we use a try catch block to handle the case where we have xmls and
 					// additional html exhibits
 					try {
@@ -312,7 +311,10 @@ public class XBRL implements Serializable {
 					} catch (Exception ex) {
 						LOG.error("Could not load " + name + " " + ex);
 					}
+				} else {
+					LOG.info("The following file was ignored " + name);
 				}
+
 				ze = zis.getNextEntry();
 			}
 
@@ -733,7 +735,7 @@ public class XBRL implements Serializable {
 		}
 		return companyInfo;
 	}
-	
+
 	public XBRL setCompanyInfo(ICompany company) {
 		this.companyInfo = company;
 		this.setCompanyNumber(company.getCompanyNumber());
@@ -898,6 +900,5 @@ public class XBRL implements Serializable {
 		this.companyInfo = null;
 
 	}
-
 
 }

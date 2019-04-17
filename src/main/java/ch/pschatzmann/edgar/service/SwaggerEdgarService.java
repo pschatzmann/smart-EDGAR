@@ -17,6 +17,4 @@ public class SwaggerEdgarService extends SwaggerService {
 	protected String getFilePath(String fileName) {
 		return fileName.replace("/edgar","");
 	}
-
-
 }

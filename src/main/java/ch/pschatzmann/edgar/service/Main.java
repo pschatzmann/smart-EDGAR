@@ -49,7 +49,7 @@ public class Main {
 
 		URI baseUri = UriBuilder.fromUri(url).port(Integer.parseInt(port)).build();
 		ResourceConfig config = new ResourceConfig();
-        config.property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 200);
+        config.property(ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, 10240);
 
         config.register(JacksonFeature.class);
 		config.register(EdgarDBService.class);

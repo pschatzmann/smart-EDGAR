@@ -56,7 +56,7 @@ public class UpdateCompanyInfoTicker {
 		}
 
 		EdgarCompany ci = new EdgarCompany(c.getCompanyNumber());
-		if (!tradingSymbol.equals(ci.getTradingSymbol())) {
+		if (!Utils.equals(tradingSymbol, ci.getTradingSymbol())) {
 			ci.setTradingSymbol(tradingSymbol);
 			ci.saveFile();
 			result = true;

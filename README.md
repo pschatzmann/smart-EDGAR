@@ -17,21 +17,12 @@ The full solution is provided as [Docker image](https://hub.docker.com/r/pschatz
 
 The Java Library can be installed with the help of Maven from the following repository http://software.pschatzmann.ch/repository/maven-public/ as 
 
-	<repositories>
-		<repository>
-			<id>pschatzmann</id>
-			<url>http://software.pschatzmann.ch/repository/maven-public/</url>
-		</repository>
-	</repositories>
-
-	<dependency>
-		<groupId>ch.pschatzmann</groupId>
-		<artifactId>smart-edgar</artifactId>
-		<version>LATEST</version>
-	</dependency>
+		<dependency>
+			<groupId>ch.pschatzmann</groupId>
+			<artifactId>smart-edgar</artifactId>
+			<version>LATEST</version>
+		</dependency>
 
 
 ## Further Information
 Further information can be found in <a href="https://www.pschatzmann.ch/home/category/edgar/">my posts</a>
-
-The Javadoc is available [here](https://pschatzmann.ch/edgar/docs)

@@ -50,9 +50,16 @@ public abstract class CompanyEdgarValuesBase implements ICompanyInfo {
 
 	protected abstract void setup() throws DataException;
 
+	public CompanyEdgarValuesBase setFilter(IRowFilter filter) {
+		return this.setFilter((BiFunction)filter, true);
+	}
 	
 	public CompanyEdgarValuesBase setFilter(BiFunction<ITable, Integer, Boolean> filter) {
 		return this.setFilter(filter, true);
+	}
+
+	public CompanyEdgarValuesBase setFilter(IRowFilter filter, boolean consolidated) {
+		return this.setFilter((BiFunction)filter, consolidated);
 	}
 	
 	public CompanyEdgarValuesBase setFilter(BiFunction<ITable, Integer, Boolean> filter, boolean consolidated) {
