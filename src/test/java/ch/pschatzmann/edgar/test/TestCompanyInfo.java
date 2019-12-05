@@ -13,7 +13,7 @@ public class TestCompanyInfo {
 	@Test
 	public void test() throws Exception {
 		EdgarCompany ci = new EdgarCompany("0000320193");
-		Assert.assertEquals("APPLE INC", ci.getCompanyName());
+		Assert.assertEquals("Apple Inc.", ci.getCompanyName());
 		Assert.assertEquals("CA", ci.getIncorporationState());
 		Assert.assertEquals("CA", ci.getLocationState());
 		Assert.assertEquals("3571", ci.getSICCode());
@@ -25,7 +25,7 @@ public class TestCompanyInfo {
 	@Test
 	public void testWoZeros() throws Exception {
 		EdgarCompany ci = new EdgarCompany("320193");
-		Assert.assertEquals("APPLE INC", ci.getCompanyName());
+		Assert.assertEquals("Apple Inc.", ci.getCompanyName());
 		Assert.assertEquals("CA", ci.getIncorporationState());
 		Assert.assertEquals("CA", ci.getLocationState());
 		Assert.assertEquals("3571", ci.getSICCode());

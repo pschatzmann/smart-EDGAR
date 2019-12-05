@@ -34,7 +34,7 @@ public class Fact implements Serializable, Comparable<Fact> {
 	};
 
 	public enum Attribute {
-		value, contextRef, instant, form, file, parameterName, label, role, from, to, order, priority, preferredLabel, href, roleURI, id, explicitMember, date, segment, identifier, companyName, tradingSymbol, incorporation, location, sicCode, sicDescription, dateLabel, segmentDimension, dimension, numberOfMonths, unitRef
+		value, contextRef, instant, form, file, parameterName, label, role, from, to, order, priority, preferredLabel, href, roleURI, id, explicitMember, date, segment, identifier, companyName, tradingSymbol, incorporation, location, sicCode, sicDescription, dateLabel, segmentDimension, dimension, numberOfMonths, unitRef, scale
 	};
 	
 	public enum DataType {

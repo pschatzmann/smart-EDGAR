@@ -128,6 +128,9 @@ public class FactValue extends Fact implements Serializable {
 				updateValueFromContinuations(sb, continuedAt);
 			}
 			value = sb.toString();
+			if (this.getXBRL().isAutoScale()) {
+				value = this.scale(value);
+			}			
 		}
 		return value;
 	}
@@ -274,5 +277,42 @@ public class FactValue extends Fact implements Serializable {
 		return year;
 	}
 	
+	/**
+	 * Values might be scaled (number of trailing zeros)
+	 * @return
+	 */
+	public int getScale() {
+		int result = 0;
+		if (getDataType()==DataType.number) {		
+			String scale = this.getAttribute(Attribute.scale);
+			if (!Utils.isEmpty(scale)) {
+				result = Integer.parseInt(scale);
+			} 
+		}
+		return result;
+	}
+	
+	/**
+	 * Scales the value
+	 * @param value
+	 * @return
+	 */
+	public String scale(String value) {
+		int scale = getScale();
+		if (scale>0) {
+			// positive scales
+			StringBuffer sb = new StringBuffer(value.trim());
+			sb.append(Utils.repeat("0",scale));
+			return sb.toString();
+		} else if (scale < 0) {
+			// negative scales
+			double doubleValue = Utils.toDouble(value) / Math.pow(10,scale);
+			return String.valueOf(doubleValue);
+		} else {
+			// no scale
+			return value;
+		}
+	}
+
 
 }

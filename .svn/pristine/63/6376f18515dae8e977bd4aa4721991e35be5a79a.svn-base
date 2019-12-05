@@ -1,8 +1,0 @@
-/**
- * Reformatting of values
- * 
- * 
- * @author pschatzmann
- *
- */
-package ch.pschatzmann.edgar.formatter;

@@ -20,9 +20,16 @@ The Java Library can be installed with the help of Maven from the following repo
 		<dependency>
 			<groupId>ch.pschatzmann</groupId>
 			<artifactId>smart-edgar</artifactId>
-			<version>LATEST</version>
+			<version>1.0.2</version>
 		</dependency>
 
 
 ## Further Information
 Further information can be found in <a href="https://www.pschatzmann.ch/home/category/edgar/">my posts</a>
+
+## Changes
+V1.0.2
+- Automatically scales FactValue entries by default 
+- Added missing index files to speed up database searches
+- Upgraded dependencies to latest versions
+

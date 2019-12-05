@@ -23,8 +23,8 @@ public class TestOnline {
 		System.out.println(info.getIncorporationState());
 
 		Assert.assertEquals("0000320193",info.getCompanyNumber());
-		Assert.assertEquals("0930",info.getFiscalYearEnd());
-		Assert.assertEquals("APPLE INC",info.getCompanyName());
+		Assert.assertEquals("0928",info.getFiscalYearEnd());
+		Assert.assertEquals("Apple Inc.",info.getCompanyName());
 		Assert.assertEquals("3571",info.getSICCode());
 		Assert.assertEquals("ELECTRONIC COMPUTERS",info.getSICDescription());
 		Assert.assertEquals("CA", info.getLocationState());

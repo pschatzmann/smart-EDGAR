@@ -72,14 +72,14 @@ public class DownloadProcessorJDBC implements IProcess {
 
 	public DownloadProcessorJDBC() throws IOException, TimeoutException, ClassNotFoundException, SQLException,
 			InterruptedException, ParseException {
-		destinationFolder = Utils.getProperty("destinationFolder", "/usr/local/bin/SmartEdgar/data/");
+		destinationFolder = Utils.getProperty("destinationFolder", "/usr/local/bin/smart-edgar/data/");
 		LOG.info("destination folder: "+destinationFolder);
+		
 		openConnection();
+		createTables();
 
-		if (!tableFactory.hasNext("select id from states limit 1", false)) {
-			createTables();
-		}
 	}
+
 
 	public static void main(String[] args) {
 		try {
@@ -294,24 +294,51 @@ public class DownloadProcessorJDBC implements IProcess {
 			tableFactory.commit();
 		}		
 	}
-
+	
 	protected void createTables()
 			throws SQLException, InterruptedException, IOException, ParseException, ClassNotFoundException {
+		if (!tableFactory.hasNext("select * from company limit 1", false)) {
+			LOG.info("Creating company");
+			createTableCompany();
+		}
+
+		if (!tableFactory.hasNext("select * from values limit 1", false)) {
+			LOG.info("Creating values");
+			createTableValues();
+		}
+
+		if (!tableFactory.hasNext("select id from states limit 1", false)) {
+			LOG.info("Creating states");
+			createTableStates();
+		}
+		
+		tableFactory.commit();
+	}
+
+	protected void createTableValues()
+			throws SQLException, InterruptedException, IOException, ParseException, ClassNotFoundException {
+
+		tableFactory.createTable("values", valueFields);
+		
 		String idx = Utils.getProperty("valuesIndex",
 				"ALTER TABLE values ADD CONSTRAINT valueskey PRIMARY KEY (date, identifier, parameterName, segment, numberOfMonths, form)");
-		tableFactory.addIndex("values", idx);
-		idx = Utils.getProperty("companyIndex",
-				"ALTER TABLE company ADD CONSTRAINT companykey PRIMARY KEY (identifier)");
-		tableFactory.addIndex("company", idx);
+		tableFactory.addIndex(idx);
+		tableFactory.addIndex("create index idx_values1 on values(parametername,segment,segmentdimension,unitref)");
+		tableFactory.addIndex("create index idx_values2 on values(file)");
+		tableFactory.addIndex("create index idx_values3 on values(identifier,parametername,segment,segmentdimension,unitref)");
+		tableFactory.addIndex("create index idx_values4 on values(form,numberofmonths,unitref,segment,segmentdimension)");
+	}
+	
 
+	protected void createTableCompany() throws SQLException {
+		String idx;
 		tableFactory.createTable("company", companyFields);
-		tableFactory.createTable("values", valueFields);
 
-		setupStatesTable();
-		
-		tableFactory.execute("create index idx_file on values(file)");
-
-		tableFactory.commit();
+		idx = Utils.getProperty("companyIndex","ALTER TABLE company ADD CONSTRAINT companykey PRIMARY KEY (identifier)");
+		tableFactory.addIndex(idx);
+		tableFactory.addIndex("create index idx_company1 on company(tradingsymbol)");
+		tableFactory.addIndex("create index idx_company2 on company(location)");
+		tableFactory.addIndex("create index idx_company3 on company(incorporation)");
 	}
 
 	/**
@@ -324,15 +351,18 @@ public class DownloadProcessorJDBC implements IProcess {
 	 * @throws ClassNotFoundException
 	 */
 
-	protected void setupStatesTable()
+	protected void createTableStates()
 			throws InterruptedException, SQLException, IOException, ParseException, ClassNotFoundException {
 		String idx;
-		openConnection();
-		idx = Utils.getProperty("statesIndex", "ALTER TABLE states ADD CONSTRAINT stateskey PRIMARY KEY (id)");
-		tableFactory.addIndex("states", idx);
+		// create table
 		tableFactory.createTable("states", statesFields);
-		BufferedReader b = new BufferedReader(
-				new InputStreamReader(this.getClass().getResourceAsStream("/STATES.csv")));
+
+		// create index
+		idx = Utils.getProperty("statesIndex", "ALTER TABLE states ADD CONSTRAINT stateskey PRIMARY KEY (id)");
+		tableFactory.addIndex(idx);
+
+		// add values
+		BufferedReader b = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/STATES.csv")));
 		String readLine = "";
 		Map record = new HashMap();
 		while ((readLine = b.readLine()) != null) {
@@ -340,9 +370,11 @@ public class DownloadProcessorJDBC implements IProcess {
 			record.put("id", sa[0]);
 			record.put("state", sa[1]);
 			record.put("country", sa[2]);
+			LOG.info("adding record "+record);
 			tableFactory.addRecord("states", statesFields, record);
-			LOG.info(record);
+			tableFactory.commit();
 		}
+		
 	}
 	
 	public void setDestinationFolder(String folder) {

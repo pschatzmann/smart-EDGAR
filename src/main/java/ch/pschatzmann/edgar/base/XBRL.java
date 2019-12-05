@@ -91,6 +91,7 @@ public class XBRL implements Serializable {
 	private boolean setupValueAttributes = true;
 	private boolean extendedCompanyInformation = true;
 	private boolean postProcessingDone = false;
+	private boolean autoScale = true;
 	private int maxFieldSize = 1000000;
 	private Map<DataType, IValueFormatter> formatters = new HashMap();
 	private EdgarFiling lastFilingInfo = null;
@@ -875,6 +876,32 @@ public class XBRL implements Serializable {
 	 */
 	public EdgarFiling getFilingInfo() {
 		return this.lastFilingInfo;
+	}
+
+	public boolean isAutoScale() {
+		return autoScale;
+	}
+
+	/**
+	 * Automatically adds the missing trailing zeros if the value is scaled
+	 * 
+	 * @param autoScale
+	 */
+	public void setAutoScale(boolean autoScale) {
+		this.autoScale = autoScale;
+	}
+	
+	/**
+	 * Checks if the filing contains any scaled values
+	 * @return
+	 */
+	public boolean containsScaledValues() {
+		for (FactValue v : findValues()) {
+			if (v.getScale()!=0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

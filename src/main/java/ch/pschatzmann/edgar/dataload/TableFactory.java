@@ -31,7 +31,6 @@ public class TableFactory {
 	private Connection connection;
 	private Map<String, PreparedStatement> psMap = new HashMap();
 	private Map<String, String> typeMap = new HashMap();
-	private Map<String, String> indexMap = new HashMap();
 
 	/**
 	 * Creates a new table with the indicated fields
@@ -62,7 +61,6 @@ public class TableFactory {
 			sb.append(");");
 
 			execute(sb.toString());
-			execute(this.indexMap.get(tableName));
 		} catch (Exception ex) {
 			result = false;
 			LOG.info(ex);
@@ -277,9 +275,10 @@ public class TableFactory {
 		connection.rollback();
 	}
 
-	public void addIndex(String tableName, String index) {
-		indexMap.put(tableName, index);
+	public void addIndex(String index) {
+		execute(index);
 	}
+		
 
 	public void close(String table) {
 		try {
@@ -312,11 +311,33 @@ public class TableFactory {
 		sb.append(" where identifier = '");
 		sb.append(id);
 		sb.append("'");
-		
+
 		if (!first) {
 			String sql = sb.toString();
 			this.execute(sql);
 		}
 
+	}
+
+	/**
+	 * Determines if the database exists
+	 * @param name
+	 * @return
+	 * @throws SQLException
+	 */
+	public boolean databaseExists(String name) throws SQLException {
+		ResultSet resultSet = connection.getMetaData().getCatalogs();
+
+		// iterate each catalog in the ResultSet
+		while (resultSet.next()) {
+			// Get the database name, which is at position 1
+			String databaseName = resultSet.getString(1);
+			if (name.equalsIgnoreCase(databaseName)) {
+				resultSet.close();
+				return true;
+			}
+		}
+		resultSet.close();
+		return false;
 	}
 }

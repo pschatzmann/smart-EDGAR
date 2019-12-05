@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import ch.pschatzmann.edgar.base.Fact.DataType;
 import ch.pschatzmann.edgar.base.Fact.Type;
+import ch.pschatzmann.edgar.utils.Utils;
 
 /**
  * Additional processing for each fact node. We try to reconstruct any missing
@@ -73,6 +74,6 @@ public class PostProcessing {
 			throw new Exception("The number of found values is " + from.size());
 		}
 		FactValue fromValue = (FactValue) from.iterator().next();
-		return Double.valueOf(factValue.getValue()).doubleValue() - Double.valueOf(fromValue.getValue()).doubleValue();
+		return Utils.toDouble(factValue.getValue()) - Utils.toDouble(fromValue.getValue());
 	}
 }

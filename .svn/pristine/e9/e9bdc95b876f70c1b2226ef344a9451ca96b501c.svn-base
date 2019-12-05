@@ -1,5 +1,0 @@
-package ch.pschatzmann.edgar.dataload.background;
-
-public interface IProcess {
-	public void process() throws Exception;
-}

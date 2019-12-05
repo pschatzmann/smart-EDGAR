@@ -36,7 +36,7 @@ public class TestMarketShare {
 		MarketShare sales = new MarketShare();
 		Number result = sales.getMarketShare("0000320193", "2015");
 		System.out.println("apple 2015: "+result);
-		Assert.assertEquals(97.63, result.doubleValue(),0.1);
+		Assert.assertEquals(79.63, result.doubleValue(),0.1);
 	}	
 
 

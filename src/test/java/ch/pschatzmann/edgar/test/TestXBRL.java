@@ -10,6 +10,7 @@ import java.util.Collection;
 import org.junit.Assert;
 import org.junit.Test;
 
+import ch.pschatzmann.edgar.base.Fact;
 import ch.pschatzmann.edgar.base.Fact.Attribute;
 import ch.pschatzmann.edgar.base.Fact.Type;
 import ch.pschatzmann.edgar.base.FactValue;
@@ -55,14 +56,21 @@ public class TestXBRL {
 
 	}
 	
+
+
 	@Test
 	public void testFindParameter() throws Exception {
 		XBRL x = new XBRL();
 		x.load(new URL(
-				"https://www.sec.gov/Archives/edgar/data/1528396/000152839617000020/0001528396-17-000020-xbrl.zip"));
-		x.find("", Type.value);
+				"https://www.sec.gov/Archives/edgar/data/320193/000032019319000119/0000320193-19-000119-xbrl.zip"));
+		Collection<FactValue> facts = x.findValues("NetIncomeLoss");
+		System.out.println(facts);
+		Assert.assertEquals("55256000000", facts.iterator().next().getValue());
 
 	}
+
+	
+	
 	
 	@Test
 	public void testCSV() throws Exception {

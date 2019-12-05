@@ -370,5 +370,24 @@ public class Utils {
 	public static boolean equals(String s1, String s2) {
 		return str(s1).equals(str(s2));
 	}
+	
+	/**
+	 * Converts a String to a Double
+	 * @param in
+	 * @return
+	 */
+	public static double toDouble(String in) {
+		if (in==null) return 0.0;
+		String value = in.trim();
+		if (value.endsWith("-")) {
+			// move trailing - to start
+			value = value.replaceAll("-","");
+			if (Utils.isEmpty(value)) {
+				value = "0";
+			}
+			value = "-"+ value;
+		}
+		return Double.valueOf(value); 
+	}
 
 }

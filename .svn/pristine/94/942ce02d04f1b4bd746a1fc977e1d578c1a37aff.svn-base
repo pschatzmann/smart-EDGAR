@@ -1,5 +1,0 @@
-package ch.pschatzmann.edgar.formatter;
-
-public interface IValueFormatter {
-	String format(String value);
-}

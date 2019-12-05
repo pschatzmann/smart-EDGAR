@@ -13,12 +13,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ch.pschatzmann.common.table.FormatException;
+import ch.pschatzmann.common.table.ITable;
 import ch.pschatzmann.common.table.TableCalculated;
 import ch.pschatzmann.common.table.TableFormatterCSV;
 import ch.pschatzmann.common.table.Value;
 import ch.pschatzmann.common.utils.Tuple;
 import ch.pschatzmann.edgar.base.EdgarCompany;
 import ch.pschatzmann.edgar.base.errors.DataException;
+import ch.pschatzmann.edgar.dataload.online.CompanyInformation;
 import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValuesBase;
 import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValuesDB;
 import ch.pschatzmann.edgar.reporting.company.CompanyEdgarValuesEdgar;
@@ -97,9 +99,11 @@ public class TestCompanyValues {
 				.map(s -> s.toString().substring(0,4))
 				.collect(Collectors.toList());
 		System.out.println(years);
-		Assert.assertTrue(years.contains("2008"));
 		Assert.assertTrue(years.contains("2009"));
 		Assert.assertTrue(years.contains("2010"));
+		Assert.assertTrue(years.contains("2011"));
+		Assert.assertTrue(years.contains("2012"));
+		Assert.assertTrue(years.contains("2013"));
 
 		Assert.assertTrue(((Number) values.toList().get(4).get("NetIncomeLoss")).doubleValue() > 0.0);
 		
@@ -336,5 +340,6 @@ public class TestCompanyValues {
 		Assert.assertEquals(38.01, ((Value)test.toList().get(1).get("MarketShare")).doubleValue(),0.1);
 		
 	}
+	
 
 }
